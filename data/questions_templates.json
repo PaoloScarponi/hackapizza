@@ -1,0 +1,29 @@
+{
+	"ingredients": [
+		"Quali piatti contengono <ingredienti>?",
+		"Quali piatti NON contengono <ingredienti>?"
+	],
+	"techniques": [
+		"Quali piatti sono preparati utilizzando <tecniche>?",
+		"Quali piatti NON sono preparati utilizzando <tecniche>?"
+	],
+	"orders": [
+		"Quali piatti sono adatti per <ordini>?",
+		"Quali piatti NON sono adatti per <ordini>?"
+	],
+	"licenses": [
+		"Quali piatti sono preparati da chef con <licenze>?"
+	],
+	"restaurants": [
+		"Quali piatti sono preparati in <ristoranti>?"
+	],
+	"planets": [
+		"Quali piatti sono preparati su <pianeta>?"
+	],
+	"distances": [
+		"Quali piatti sono preparati entro <distanza> da <pianeta>?"
+	],
+	"limits": [
+		"Quali piatti rispettano i limiti di legge per tutti gli ingredienti?"
+	]
+}
