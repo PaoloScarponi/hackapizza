@@ -8,14 +8,23 @@ from modules import KBMConfig, KnowledgeBaseManager
 
 
 # function definition
-def main():
-    pass
+def build_knowledge_base(kb_manager: KnowledgeBaseManager, menus_path: Path) -> None:
+
+    dishes = []
+    for menu_path in menus_path.glob('*pdf'):
+        dishes.extend(kb_manager.process_menu(menu_path=menu_path))
+
+    return
 
 
 # main-like execution
 if __name__ == '__main__':
+
+    # load environment variables
     load_dotenv()
-    kb_manager = KnowledgeBaseManager(
+
+    # create knowledge base manager object
+    kb_manager_ = KnowledgeBaseManager(
         config=KBMConfig(
             model_name=os.getenv('LLM_NAME'),
             model_uri=os.getenv('LLM_URI'),
@@ -24,3 +33,6 @@ if __name__ == '__main__':
             dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json',
         )
     )
+
+    # execute knowledge base building pipeline
+    build_knowledge_base(kb_manager=kb_manager_, menus_path=Path(__file__).parent / 'data' / 'raw' / 'menus')

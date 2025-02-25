@@ -23,7 +23,7 @@ class KnowledgeBaseManager:
         Parameters
         ----------
         config: KBMConfig
-            The object containing all the parameters to set up a generic object of this class.
+            The object containing all the parameters to set up a specific object of this class.
 
         """
 
