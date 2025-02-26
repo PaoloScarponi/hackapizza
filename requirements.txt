@@ -2,4 +2,5 @@ loguru==0.7.3
 python-dotenv==1.0.1
 pydantic==2.10.6
 pdfplumber==0.11.5
+docling==2.24.0
 langchain-ollama==0.2.3

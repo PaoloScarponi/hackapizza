@@ -11,7 +11,7 @@ from modules import KBMConfig, KnowledgeBaseManager
 def build_knowledge_base(kb_manager: KnowledgeBaseManager, menus_path: Path) -> None:
 
     dishes = []
-    for menu_path in menus_path.glob('*pdf'):
+    for menu_path in menus_path.glob('*pkl'):
         dishes.extend(kb_manager.process_menu(menu_path=menu_path))
 
     return
@@ -30,9 +30,10 @@ if __name__ == '__main__':
             model_uri=os.getenv('LLM_URI'),
             manual_path=Path(__file__).parent / 'data' / 'raw' / 'Manuale di Cucina.pdf',
             code_path=Path(__file__).parent / 'data' / 'raw' / 'Codice Galattico.pdf',
-            dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json',
+            planets_names_path=Path(__file__).parent / 'data' / 'planets_distances.csv',
+            dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json'
         )
     )
 
     # execute knowledge base building pipeline
-    build_knowledge_base(kb_manager=kb_manager_, menus_path=Path(__file__).parent / 'data' / 'raw' / 'menus')
+    build_knowledge_base(kb_manager=kb_manager_, menus_path=Path(__file__).parent / 'data' / 'processed' / 'menus')

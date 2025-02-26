@@ -1,11 +1,14 @@
 # external modules import
 import re
 import json
+import pickle
 import pdfplumber
 from pathlib import Path
 from loguru import logger
 from typing import List, Dict
 from langchain_ollama.llms import OllamaLLM
+from docling_core.types.doc.document import DoclingDocument, DocItemLabel
+from networkx.generators.community import planted_partition_graph
 
 # internal modules import
 from .configs import KBMConfig
@@ -43,6 +46,7 @@ class KnowledgeBaseManager:
             licenses_info=self._extract_licenses_info(manual_content),
             techniques_info=self._extract_techniques_info(manual_content),
             techniques_reqs=self._extract_techniques_reqs(code_content),
+            planets_names=self._extract_planets_names(config.planets_names_path),
             dishes_codes=self._load_dishes_codes(config.dishes_codes_path)
         )
 
@@ -86,13 +90,57 @@ class KnowledgeBaseManager:
         return output_text
 
     @staticmethod
+    def _extract_planets_names(file_path: Path) -> List[str]:
+        with open(file_path, 'r') as f:
+            planets_names = f.readline().strip().split(',')[1:]
+
+        return planets_names
+
+    @staticmethod
     def _load_dishes_codes(file_path: Path) -> Dict:
         with open(file_path, 'r') as file:
             dishes_codes = json.load(file)
 
         return dishes_codes
 
+    @staticmethod
+    def _extract_restaurant_info(menu: DoclingDocument) -> List[str]:
+        restaurant_info = []
+        for t in menu.texts:
+            if t.label == DocItemLabel.SECTION_HEADER and t.text.lower() == 'menu':
+                logger.info(f'Menu Found: {restaurant_info[0]}')
+                break
+            restaurant_info.append(t.text)
+
+        return restaurant_info
+
+    @staticmethod
+    def _extract_dishes_info(menu: DoclingDocument) -> List[List[str]]:
+        # TODO: implement this method
+        dishes_info = []
+
+        return dishes_info
+
     # public methods
     def process_menu(self, menu_path: Path) -> List[Dish]:
-        # TODO: implement this method
-        pass
+        # TODO: complete the implementation of this method
+
+        # initialize output
+        dishes = []
+
+        # load document
+        with open(menu_path, 'rb') as f:
+            menu: DoclingDocument = pickle.load(f)
+
+        # preprocess document content
+        restaurant_info = self._extract_restaurant_info(menu=menu)
+        dishes_info = self._extract_dishes_info(menu=menu)
+
+        # extract restaurant, chef,
+
+        # ciclo su ogni piatto
+        # estrazione porzione di testo di un singolo piatto
+            # estrazione del titolo
+            # estrazione info ordini
+
+        return dishes
