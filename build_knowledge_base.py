@@ -1,7 +1,7 @@
 # external modules import
-from dotenv import load_dotenv
-from pathlib import Path
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 
 # internal modules import
 from modules import KBMConfig, KnowledgeBaseManager
@@ -20,7 +20,8 @@ def build_knowledge_base(kb_manager: KnowledgeBaseManager, menus_path: Path) -> 
 # main-like execution
 if __name__ == '__main__':
 
-    # load environment variables
+    # load/setup environment variables
+    os.environ['HF_HOME'] = './ data / cache'
     load_dotenv()
 
     # create knowledge base manager object

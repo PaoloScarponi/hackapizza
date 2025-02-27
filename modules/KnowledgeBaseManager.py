@@ -6,9 +6,9 @@ import pdfplumber
 from pathlib import Path
 from loguru import logger
 from typing import List, Dict
+from Levenshtein import distance
 from langchain_ollama.llms import OllamaLLM
-from docling_core.types.doc.document import DoclingDocument, DocItemLabel
-from networkx.generators.community import planted_partition_graph
+from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLabel
 
 # internal modules import
 from .configs import KBMConfig
@@ -104,26 +104,31 @@ class KnowledgeBaseManager:
         return dishes_codes
 
     @staticmethod
-    def _extract_restaurant_info(menu: DoclingDocument) -> List[str]:
-        restaurant_info = []
-        for t in menu.texts:
-            if t.label == DocItemLabel.SECTION_HEADER and t.text.lower() == 'menu':
-                logger.info(f'Menu Found: {restaurant_info[0]}')
-                break
-            restaurant_info.append(t.text)
+    def _find_menu_keyword(menu: DoclingDocument) -> int:
+        for i, t in enumerate(menu.texts):
+            if t.label == DocItemLabel.SECTION_HEADER and 'menu' in t.text.lower():
+                return i
 
-        return restaurant_info
+        return -1
 
     @staticmethod
-    def _extract_dishes_info(menu: DoclingDocument) -> List[List[str]]:
-        # TODO: implement this method
-        dishes_info = []
+    def _extract_restaurant_info(restaurant_texts: List[DocItem]) -> List[str]:
+        return [t.text for t in restaurant_texts]
+
+    def _extract_dishes_info(self, dishes_texts: List[DocItem]) -> List[List[str]]:
+        dishes_info, current_dish_info = [], []
+        for t in dishes_texts:
+            if any([distance(t.text.lower(), dish_name.lower()) < 2 for dish_name in self.info.dishes_codes.keys()]):
+                if len(current_dish_info) > 0:
+                    dishes_info.append(current_dish_info)
+                    current_dish_info = []
+            current_dish_info.append(t.text)
+        dishes_info.append(current_dish_info)
 
         return dishes_info
 
     # public methods
     def process_menu(self, menu_path: Path) -> List[Dish]:
-        # TODO: complete the implementation of this method
 
         # initialize output
         dishes = []
@@ -133,14 +138,17 @@ class KnowledgeBaseManager:
             menu: DoclingDocument = pickle.load(f)
 
         # preprocess document content
-        restaurant_info = self._extract_restaurant_info(menu=menu)
-        dishes_info = self._extract_dishes_info(menu=menu)
+        menu_keyword_position = self._find_menu_keyword(menu=menu)
+        if menu_keyword_position != -1:
+            restaurant_info = self._extract_restaurant_info(restaurant_texts=menu.texts[0:menu_keyword_position])
+            dishes_info = self._extract_dishes_info(dishes_texts=menu.texts[(menu_keyword_position + 1):])
+        else:
+            pass
 
-        # extract restaurant, chef,
+        # extract restaurant and chef info
+        # TODO: create Restaurant and Chef objects from restaurant_info
 
-        # ciclo su ogni piatto
-        # estrazione porzione di testo di un singolo piatto
-            # estrazione del titolo
-            # estrazione info ordini
+        # extract ingredients and techniques for each dish
+        # TODO: create a Dish object from each element in the dishes_info list
 
         return dishes
