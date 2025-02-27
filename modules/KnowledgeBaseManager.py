@@ -11,8 +11,9 @@ from langchain_ollama.llms import OllamaLLM
 from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLabel
 
 # internal modules import
+from .enums import Planet
 from .configs import KBMConfig
-from .templates import Info, Dish
+from .templates import Info, Dish, Restaurant, Chef
 
 
 # class definition
@@ -43,10 +44,10 @@ class KnowledgeBaseManager:
 
         # initialize supporting info object
         self.info = Info(
+            planets_names=[x.value for x in Planet],
             licenses_info=self._extract_licenses_info(manual_content),
             techniques_info=self._extract_techniques_info(manual_content),
             techniques_reqs=self._extract_techniques_reqs(code_content),
-            planets_names=self._extract_planets_names(config.planets_names_path),
             dishes_codes=self._load_dishes_codes(config.dishes_codes_path)
         )
 
@@ -90,13 +91,6 @@ class KnowledgeBaseManager:
         return output_text
 
     @staticmethod
-    def _extract_planets_names(file_path: Path) -> List[str]:
-        with open(file_path, 'r') as f:
-            planets_names = f.readline().strip().split(',')[1:]
-
-        return planets_names
-
-    @staticmethod
     def _load_dishes_codes(file_path: Path) -> Dict:
         with open(file_path, 'r') as file:
             dishes_codes = json.load(file)
@@ -127,6 +121,23 @@ class KnowledgeBaseManager:
 
         return dishes_info
 
+    @staticmethod
+    def _populate_restaurant(restaurant_info: List[str]) -> Restaurant:
+        restaurant_name = re.sub(r'Ristorante:|Ristorante "|"', '', restaurant_info[0]).strip()
+        restaurant_planet = Planet.UNDISCLOSED
+        r_info = '\n'.join(restaurant_info).lower()
+        for p in Planet:
+            if p.value.lower() in r_info:
+                restaurant_planet = p
+                break
+
+        return Restaurant(name=restaurant_name, planet=restaurant_planet)
+
+    @staticmethod
+    def _populate_chef(restaurant_info: List[str]) -> Chef:
+        # TODO: implement this method
+        pass
+
     # public methods
     def process_menu(self, menu_path: Path) -> List[Dish]:
 
@@ -137,18 +148,19 @@ class KnowledgeBaseManager:
         with open(menu_path, 'rb') as f:
             menu: DoclingDocument = pickle.load(f)
 
-        # preprocess document content
+        # extract dishes information
         menu_keyword_position = self._find_menu_keyword(menu=menu)
         if menu_keyword_position != -1:
+
+            # preprocess document content
             restaurant_info = self._extract_restaurant_info(restaurant_texts=menu.texts[0:menu_keyword_position])
             dishes_info = self._extract_dishes_info(dishes_texts=menu.texts[(menu_keyword_position + 1):])
-        else:
-            pass
 
-        # extract restaurant and chef info
-        # TODO: create Restaurant and Chef objects from restaurant_info
+            # extract restaurant and chef info
+            restaurant = self._populate_restaurant(restaurant_info=restaurant_info)
+            chef = self._populate_chef(restaurant_info=restaurant_info)
 
-        # extract ingredients and techniques for each dish
-        # TODO: create a Dish object from each element in the dishes_info list
+            # extract ingredients and techniques for each dish
+            # TODO: create a Dish object from each element in the dishes_info list
 
         return dishes

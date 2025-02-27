@@ -7,7 +7,6 @@ from docling.document_converter import DocumentConverter
 
 # function definition
 def preprocess_menu(input_menus_path: Path, output_menus_path: Path) -> None:
-
     for menu_path in input_menus_path.glob('*pdf'):
         menu = DocumentConverter().convert(menu_path).document
         with open(output_menus_path / (menu_path.name[:-4] + '.pkl'), 'wb') as f:

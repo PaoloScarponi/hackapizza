@@ -14,3 +14,4 @@ class Planet(Enum):
     EGO = 'Ego'
     MONTRESSOSR = 'Montressosr'
     KLYNTAR = 'Klyntar'
+    UNDISCLOSED = 'Undisclosed'

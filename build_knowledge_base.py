@@ -31,7 +31,6 @@ if __name__ == '__main__':
             model_uri=os.getenv('LLM_URI'),
             manual_path=Path(__file__).parent / 'data' / 'raw' / 'Manuale di Cucina.pdf',
             code_path=Path(__file__).parent / 'data' / 'raw' / 'Codice Galattico.pdf',
-            planets_names_path=Path(__file__).parent / 'data' / 'planets_distances.csv',
             dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json'
         )
     )

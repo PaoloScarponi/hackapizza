@@ -21,3 +21,4 @@ The sequence of operations required to produce the uploaded results are the foll
 * Understand how to handle distances between planets.
 * Understand how to handle orders.
 * Understand how to handle substances law limits.
+* Check unsure restaurants planets (L'Equilibrio Quantico - Tatooine, Le Stelle Danzanti - Undisclosed/Namecc)
