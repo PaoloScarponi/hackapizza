@@ -6,7 +6,7 @@ from langchain.output_parsers import PydanticOutputParser
 
 # internal modules import
 from .configs import LLMConfig
-from .templates import LicensesList
+from .templates import LicensesList, IngredientsList, TechniquesList
 
 
 # class definition
@@ -78,3 +78,9 @@ class LLMWrapper:
         )
 
         return licenses_list
+
+    def extract_dish_ingredients(self, input_text: str) -> IngredientsList:
+        pass
+
+    def extract_dish_techniques(self, input_text: str, additional_info: str) -> TechniquesList:
+        pass

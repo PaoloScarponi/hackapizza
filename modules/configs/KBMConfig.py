@@ -9,3 +9,4 @@ class KBMConfig:
     manual_path: Path
     code_path: Path
     dishes_codes_path: Path
+    kb_path: Path

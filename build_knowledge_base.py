@@ -9,10 +9,8 @@ from modules import LLMConfig, LLMWrapper, KBMConfig, KnowledgeBaseManager
 
 # function definition
 def build_knowledge_base(kb_manager: KnowledgeBaseManager, menus_path: Path) -> None:
-
-    dishes = []
     for menu_path in menus_path.glob('*pkl'):
-        dishes.extend(kb_manager.process_menu(menu_path=menu_path))
+        kb_manager.memorize_dishes(augmented_dishes=kb_manager.process_menu(menu_path=menu_path))
 
     return
 
@@ -29,7 +27,8 @@ if __name__ == '__main__':
         config=KBMConfig(
             manual_path=Path(__file__).parent / 'data' / 'raw' / 'Manuale di Cucina.pdf',
             code_path=Path(__file__).parent / 'data' / 'raw' / 'Codice Galattico.pdf',
-            dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json'
+            dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json',
+            kb_path=Path(__file__).parent / 'data' / 'processed' / 'dishes'
         ),
         llm_wrapper=LLMWrapper(
             config=LLMConfig(

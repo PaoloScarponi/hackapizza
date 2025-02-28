@@ -13,7 +13,7 @@ from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLab
 from .enums import Planet
 from .configs import KBMConfig
 from .LLMWrapper import LLMWrapper
-from .templates import Info, Dish, Restaurant, Chef
+from .templates import Info, Restaurant, Chef, Dish, AugmentedDish
 
 
 # class definition
@@ -31,8 +31,9 @@ class KnowledgeBaseManager:
 
         """
 
-        # initialize llm object
+        # initialize llm object and knowledge base path
         self.llm_wrapper = llm_wrapper
+        self.kb_path = config.kb_path
 
         # extract cooking manual content
         manual_content = self._extract_document_content(config.manual_path)
@@ -134,16 +135,37 @@ class KnowledgeBaseManager:
         return Restaurant(name=restaurant_name, planet=restaurant_planet)
 
     def _populate_chef(self, restaurant_info: List[str]) -> Chef:
-        chef_name = self.llm_wrapper.extract_chef_name(input_text='\n'.join(restaurant_info))
-        chef_licenses = self.llm_wrapper.extract_chef_licenses(input_text='\n'.join(restaurant_info), additional_info=self.info.licenses_info)
+        chef_name = self.llm_wrapper.extract_chef_name(
+            input_text=(r_info_str := '\n'.join(restaurant_info))
+        )
+        chef_licenses = self.llm_wrapper.extract_chef_licenses(
+            input_text=r_info_str,
+            additional_info=self.info.licenses_info
+        )
 
         return Chef(name=chef_name, licenses=chef_licenses)
 
+    def _populate_dish(self, dishes_info: List[str]) -> Dish:
+        dish_code, dish_name = 0, ''
+        for d_name, d_code in self.info.dishes_codes.items():
+            if distance(dishes_info[0], d_name) < 2:
+                dish_code, dish_name = d_code, d_name
+                break
+        dish_ingredients = self.llm_wrapper.extract_dish_ingredients(
+            input_text=(d_info_str := '\n'.join(dishes_info))
+        )
+        dish_techniques = self.llm_wrapper.extract_dish_techniques(
+            input_text=d_info_str,
+            additional_info=self.info.techniques_info
+        )
+
+        return Dish(code=dish_code, name=dish_name, ingredients=dish_ingredients, techniques=dish_techniques)
+
     # public methods
-    def process_menu(self, menu_path: Path) -> List[Dish]:
+    def process_menu(self, menu_path: Path) -> List[AugmentedDish]:
 
         # initialize output
-        dishes = []
+        augmented_dishes = []
 
         # load document
         with open(menu_path, 'rb') as f:
@@ -162,6 +184,20 @@ class KnowledgeBaseManager:
             chef = self._populate_chef(restaurant_info=restaurant_info)
 
             # extract ingredients and techniques for each dish
-            # TODO: create a Dish object from each element in the dishes_info list
+            for current_dish_info in dishes_info:
+                augmented_dishes.append(
+                    AugmentedDish(
+                        restaurant=restaurant,
+                        chef=chef,
+                        dish=self._populate_dish(dishes_info=current_dish_info)
+                    )
+                )
 
-        return dishes
+        return augmented_dishes
+
+    def memorize_dishes(self, augmented_dishes: List[AugmentedDish]) -> None:
+        for ad in augmented_dishes:
+            with open(self.kb_path / (str(ad.dish.code) + '.json'), 'w') as f:
+                f.write(ad.model_dump_json(indent=4))
+
+        return

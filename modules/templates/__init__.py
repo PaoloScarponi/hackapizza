@@ -6,5 +6,6 @@ from .LicensesList import LicensesList
 from .Ingredient import Ingredient
 from .IngredientsList import IngredientsList
 from .Technique import Technique
-from .TechniquesList import TechniqueList
+from .TechniquesList import TechniquesList
 from .Dish import Dish
+from .AugmentedDish import AugmentedDish

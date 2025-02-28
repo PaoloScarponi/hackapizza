@@ -7,7 +7,7 @@ from .Technique import Technique
 
 
 # template definition
-class TechniqueList(BaseModel):
+class TechniquesList(BaseModel):
     """
     This class models a list of cooking techniques.
     """
