@@ -7,12 +7,12 @@ from pathlib import Path
 from loguru import logger
 from typing import List, Dict
 from Levenshtein import distance
-from langchain_ollama.llms import OllamaLLM
 from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLabel
 
 # internal modules import
 from .enums import Planet
 from .configs import KBMConfig
+from .LLMWrapper import LLMWrapper
 from .templates import Info, Dish, Restaurant, Chef
 
 
@@ -20,7 +20,7 @@ from .templates import Info, Dish, Restaurant, Chef
 class KnowledgeBaseManager:
 
     # constructor
-    def __init__(self, config: KBMConfig):
+    def __init__(self, config: KBMConfig, llm_wrapper: LLMWrapper):
         """
         This is the constructor for a generic Knowledge Base Manager object.
 
@@ -32,7 +32,7 @@ class KnowledgeBaseManager:
         """
 
         # initialize llm object
-        self.model = OllamaLLM(model=config.model_name, base_url=config.model_uri)
+        self.llm_wrapper = llm_wrapper
 
         # extract cooking manual content
         manual_content = self._extract_document_content(config.manual_path)
@@ -133,10 +133,11 @@ class KnowledgeBaseManager:
 
         return Restaurant(name=restaurant_name, planet=restaurant_planet)
 
-    @staticmethod
-    def _populate_chef(restaurant_info: List[str]) -> Chef:
-        # TODO: implement this method
-        pass
+    def _populate_chef(self, restaurant_info: List[str]) -> Chef:
+        chef_name = self.llm_wrapper.extract_chef_name(input_text='\n'.join(restaurant_info))
+        chef_licenses = self.llm_wrapper.extract_chef_licenses(input_text='\n'.join(restaurant_info), additional_info=self.info.licenses_info)
+
+        return Chef(name=chef_name, licenses=chef_licenses)
 
     # public methods
     def process_menu(self, menu_path: Path) -> List[Dish]:

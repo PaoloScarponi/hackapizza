@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # internal modules import
-from modules import KBMConfig, KnowledgeBaseManager
+from modules import LLMConfig, LLMWrapper, KBMConfig, KnowledgeBaseManager
 
 
 # function definition
@@ -27,11 +27,15 @@ if __name__ == '__main__':
     # create knowledge base manager object
     kb_manager_ = KnowledgeBaseManager(
         config=KBMConfig(
-            model_name=os.getenv('LLM_NAME'),
-            model_uri=os.getenv('LLM_URI'),
             manual_path=Path(__file__).parent / 'data' / 'raw' / 'Manuale di Cucina.pdf',
             code_path=Path(__file__).parent / 'data' / 'raw' / 'Codice Galattico.pdf',
             dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json'
+        ),
+        llm_wrapper=LLMWrapper(
+            config=LLMConfig(
+                model_uri=os.getenv('LLM_URI'),
+                model_name=os.getenv('KBM_LLM_NAME')
+            )
         )
     )
 
