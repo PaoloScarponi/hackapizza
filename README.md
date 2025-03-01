@@ -24,7 +24,6 @@ The sequence of operations required to produce the uploaded results are the foll
 
 ### Offline Phase
 
-* Check unsure restaurants planets (L'Equilibrio Quantico - Tatooine, Le Stelle Danzanti - Undisclosed).
-* Understand the effect of not updating the chef licenses based on dishes techniques.
 * Understand the effect of not using ingredients categories and techniques subcategories on the performance.
+* Understand the effect of not updating the chef licenses based on dishes techniques.
 * Understand the effect of not handling substances law limits.

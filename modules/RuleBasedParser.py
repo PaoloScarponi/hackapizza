@@ -41,12 +41,12 @@ class RuleBasedParser:
     def extract_dish_ingredients(input_text: List[str]) -> IngredientsList:
         ingredients_list, start_flag = [], False
         for line in input_text:
+            if distance(line.lower(), 'tecniche') <= 1 or distance(line.lower(), 'techniques') <= 1:
+                break
             if start_flag:
                 ingredients_list.append(re.sub(r'[\r\n]+', '', line))
-            if distance(line.lower(), 'ingredienti') < 1:
+            if distance(line.lower(), 'ingredienti') <= 1:
                 start_flag = True
-            if distance(line.lower(), 'tecniche') < 1 or distance(line.lower(), 'techniques') < 1:
-                break
 
         return IngredientsList(items=[Ingredient(name=x) for x in ingredients_list])
 

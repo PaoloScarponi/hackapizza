@@ -10,5 +10,6 @@ class LicenseName(Enum):
     ANTIMATERIA = 'Antimateria'
     MAGNETICA = 'Magnetica'
     QUANTISTICA = 'Quantistica'
+    QUANTICA = 'Quantica'
     LUCE = 'Luce'
     LIVELLO_DI_SVILUPPO_TECNOLOGICO = 'Livello di Sviluppo Tecnologico'

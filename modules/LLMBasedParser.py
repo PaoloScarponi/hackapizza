@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 
 # internal modules import
-from .configs import LLMConfig
+from .configs import LBPConfig
 from .templates import LicensesList, IngredientsList
 
 
@@ -13,7 +13,7 @@ from .templates import LicensesList, IngredientsList
 class LLMBasedParser:
 
     # constructor
-    def __init__(self, config: LLMConfig):
+    def __init__(self, config: LBPConfig):
 
         # initialize llm object
         self.model = OllamaLLM(model=config.ollama_model_name, base_url=config.ollama_server_uri)
@@ -45,7 +45,7 @@ class LLMBasedParser:
 
         return chef_name
 
-    def extract_chef_licenses(self, input_text: str, additional_info: str) -> LicensesList:
+    def extract_chef_licenses(self, input_text: str) -> LicensesList:
 
         # initialize output parser
         parser = PydanticOutputParser(pydantic_object=LicensesList)
@@ -53,15 +53,13 @@ class LLMBasedParser:
         # build prompt
         prompt = PromptTemplate(
             template=(
-                'You are an advanced document parser that extracts information from a text written in italian.\n'
-                'In particular, you need to recognize the licenses a chef has.\n'
-                'Extract the following fields from the given text and output in JSON format:\n'
+                'You are an advanced document parser that extracts the licenses of a chef from a text written in italian.\n'
+                'Extract the licenses from the given text and output in JSON format:\n'
                 '{format_instructions}\n'
-                'To understand the available licenses names and codes use the following additional info:\n'
-                'Additional Info: {additional_info}\n'
-                'Make sure the output is fully compliant with the provided JSON schema. In particular, for each license:\n'
-                '* Always specify all the attributes.\n'
-                '* Do not invent names nor codes.\n\n'
+                'Make sure the output is fully compliant with the provided JSON schema. In particular:\n'
+                '* ALWAYS specify all the attributes for every extracted license.\n'
+                '* USE ONLY names and codes available in the schema, DO NOT invent them. If you find any name or code'
+                'that is not in the schema, map it to the most plausible one in the schema.\n\n'
                 'Text: {input_text}'
             ),
             input_variables=[
@@ -75,7 +73,6 @@ class LLMBasedParser:
         # query llm
         licenses_list = (prompt | self.model | parser).invoke(
             {
-                'additional_info': additional_info,
                 'input_text': input_text
             }
         )

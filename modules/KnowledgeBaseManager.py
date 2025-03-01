@@ -13,7 +13,7 @@ from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLab
 # internal modules import
 from .enums import Planet
 from .configs import KBMConfig
-from .LLMWrapper import LLMWrapper
+from .LLMBasedParser import LLMBasedParser
 from .RuleBasedParser import RuleBasedParser
 from .templates import Info, Restaurant, Chef, Dish, AugmentedDish
 
@@ -22,7 +22,7 @@ from .templates import Info, Restaurant, Chef, Dish, AugmentedDish
 class KnowledgeBaseManager:
 
     # constructor
-    def __init__(self, config: KBMConfig, llm_wrapper: LLMWrapper):
+    def __init__(self, config: KBMConfig, llm_wrapper: LLMBasedParser):
         """
         This is the constructor for a generic Knowledge Base Manager object.
 
@@ -48,9 +48,9 @@ class KnowledgeBaseManager:
         # initialize supporting info object
         self.info = Info(
             planets_names=[x.value for x in Planet],
-            licenses_info=self._extract_licenses_info(manual),
+            licenses_info=self._extract_licenses_info(manual),                  # not used at the moment
             techniques_info=self._extract_techniques_info(manual),
-            techniques_reqs=self._extract_techniques_reqs(code),
+            techniques_reqs=self._extract_techniques_reqs(code),                # not used at the moment
             dishes_codes=self._load_dishes_codes(config.dishes_codes_path)
         )
 
