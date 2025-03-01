@@ -25,10 +25,10 @@ class KnowledgeBaseManager:
     """
 
     # constructor
-    def __init__(self, config: KBMConfig, llm_wrapper: LLMBasedParser):
+    def __init__(self, config: KBMConfig, llm_based_parser: LLMBasedParser):
 
         # initialize llm object and knowledge base path
-        self.llm_wrapper = llm_wrapper
+        self.llm_based_parser = llm_based_parser
         self.kb_path = config.kb_path
 
         # load cooking manual content
@@ -146,10 +146,10 @@ class KnowledgeBaseManager:
         return Restaurant(name=restaurant_name, planet=restaurant_planet)
 
     def _populate_chef(self, restaurant_info: List[str]) -> Chef:
-        chef_name = self.llm_wrapper.extract_chef_name(
+        chef_name = self.llm_based_parser.extract_chef_name(
             input_text=(r_info_str := '\n'.join(restaurant_info))
         )
-        chef_licenses = self.llm_wrapper.extract_chef_licenses(
+        chef_licenses = self.llm_based_parser.extract_chef_licenses(
             input_text=r_info_str
         )
 
@@ -171,7 +171,7 @@ class KnowledgeBaseManager:
                 additional_info=self.info.techniques_info
             )
         else:
-            dish_ingredients = self.llm_wrapper.extract_dish_ingredients(
+            dish_ingredients = self.llm_based_parser.extract_dish_ingredients(
                 input_text='\n'.join(dishes_info)
             )
             dish_techniques = RuleBasedParser.extract_dish_techniques_v2(

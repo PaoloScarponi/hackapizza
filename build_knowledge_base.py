@@ -31,7 +31,7 @@ if __name__ == '__main__':
             dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json',
             kb_path=Path(__file__).parent / 'data' / 'processed' / 'dishes'
         ),
-        llm_wrapper=LLMBasedParser(
+        llm_based_parser=LLMBasedParser(
             config=LBPConfig(
                 ollama_server_uri=os.getenv('OLLAMA_SERVER_URI'),
                 ollama_model_name=os.getenv('LBP_MODEL_NAME')
