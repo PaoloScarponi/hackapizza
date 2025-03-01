@@ -5,4 +5,5 @@ pdfplumber==0.11.5
 docling==2.24.0
 Levenshtein==0.26.1
 langchain==0.3.19
+langchain-core==0.3.40
 langchain-ollama==0.2.3

@@ -1,8 +1,12 @@
 # external modules import
 import re
+import time
+import functools
+from loguru import logger
 from langchain_ollama.llms import OllamaLLM
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
+from langchain_core.exceptions import OutputParserException
 
 # internal modules import
 from .configs import LBPConfig
@@ -18,7 +22,32 @@ class LLMBasedParser:
         # initialize llm object
         self.model = OllamaLLM(model=config.ollama_model_name, base_url=config.ollama_server_uri)
 
+    # decorators
+    @staticmethod
+    def retry_on_exception(max_retries, delay):
+        max_retries_, delay_ = max_retries, delay
+
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(self, *args, **kwargs):
+                attempts = 0
+                while True:
+                    try:
+                        return func(self, *args, **kwargs)
+                    except OutputParserException as e:
+                        logger.info(f'Retrying {func.__name__} Execution')
+                        attempts += 1
+                        if attempts < max_retries_:
+                            time.sleep(delay_)
+                        else:
+                            raise e
+
+            return wrapper
+
+        return decorator
+
     # public methods
+    @retry_on_exception(max_retries=5, delay=1)
     def extract_chef_name(self, input_text: str) -> str:
 
         # build prompt
@@ -45,6 +74,7 @@ class LLMBasedParser:
 
         return chef_name
 
+    @retry_on_exception(max_retries=5, delay=1)
     def extract_chef_licenses(self, input_text: str) -> LicensesList:
 
         # initialize output parser
@@ -79,6 +109,7 @@ class LLMBasedParser:
 
         return licenses_list
 
+    @retry_on_exception(max_retries=5, delay=1)
     def extract_dish_ingredients(self, input_text: str) -> IngredientsList:
 
         # initialize output parser

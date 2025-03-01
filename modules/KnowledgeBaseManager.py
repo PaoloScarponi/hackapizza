@@ -156,13 +156,13 @@ class KnowledgeBaseManager:
             input_text=(r_info_str := '\n'.join(restaurant_info))
         )
         chef_licenses = self.llm_wrapper.extract_chef_licenses(
-            input_text=r_info_str,
-            additional_info=self.info.licenses_info
+            input_text=r_info_str
         )
 
         return Chef(name=chef_name, licenses=chef_licenses)
 
     def _populate_dish(self, dishes_info: List[str], dishes_flag: bool) -> Dish:
+        # TODO: implement logic to handle orders.
         dish_code, dish_name = 0, ''
         for d_name, d_code in self.info.dishes_codes.items():
             if distance(dishes_info[0], d_name) <= 2:
@@ -200,8 +200,6 @@ class KnowledgeBaseManager:
         # extract dishes information
         menu_keyword_position = self._find_menu_keyword(menu=menu)
         if menu_keyword_position != -1:
-            # TODO: implement logic to handle orders.
-            # TODO: implement logic to handle noisy menus (Datapizza, L'Essenza delle Dune, Le Dimensioni del Gusto).
 
             # preprocess document content
             restaurant_info = self._extract_restaurant_info(restaurant_texts=menu.texts[0:menu_keyword_position])
