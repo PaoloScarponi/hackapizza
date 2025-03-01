@@ -5,14 +5,16 @@ import pickle
 import pdfplumber
 from pathlib import Path
 from loguru import logger
-from typing import List, Dict
+from pdfplumber.pdf import PDF
 from Levenshtein import distance
+from typing import List, Tuple, Dict
 from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLabel
 
 # internal modules import
 from .enums import Planet
 from .configs import KBMConfig
 from .LLMWrapper import LLMWrapper
+from .RuleBasedParser import RuleBasedParser
 from .templates import Info, Restaurant, Chef, Dish, AugmentedDish
 
 
@@ -35,56 +37,66 @@ class KnowledgeBaseManager:
         self.llm_wrapper = llm_wrapper
         self.kb_path = config.kb_path
 
-        # extract cooking manual content
-        manual_content = self._extract_document_content(config.manual_path)
-        logger.info('The information from the Cooking Manual has been loaded.')
+        # load cooking manual content
+        manual = self._load_document(config.manual_path)
+        logger.info('The Cooking Manual has been loaded.')
 
-        # extract code of conduct content
-        code_content = self._extract_document_content(config.code_path)
+        # load code of conduct content
+        code = self._load_document(config.code_path)
         logger.info('The Galactic Code of Conduct has been loaded.')
 
         # initialize supporting info object
         self.info = Info(
             planets_names=[x.value for x in Planet],
-            licenses_info=self._extract_licenses_info(manual_content),
-            techniques_info=self._extract_techniques_info(manual_content),
-            techniques_reqs=self._extract_techniques_reqs(code_content),
+            licenses_info=self._extract_licenses_info(manual),
+            techniques_info=self._extract_techniques_info(manual),
+            techniques_reqs=self._extract_techniques_reqs(code),
             dishes_codes=self._load_dishes_codes(config.dishes_codes_path)
         )
 
+        # free memory
+        del code, manual
+
     # non-public methods
     @ staticmethod
-    def _extract_document_content(file_path: Path) -> str:
-        file_content = ''
-        with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                if page_content := page.extract_text():
-                    file_content += page_content
-
-        return file_content
+    def _load_document(file_path: Path) -> PDF:
+        return pdfplumber.open(file_path)
 
     @staticmethod
-    def _extract_licenses_info(input_text: str) -> str:
-        output_text = input_text.split('Capitolo 1:')[1].split('Capitolo 2')[0]
+    def _extract_licenses_info(document: PDF) -> str:
+        document_content = ''
+        for page in document.pages:
+            if page_content := page.extract_text():
+                document_content += page_content
+        output_text = document_content.split('Capitolo 1:')[1].split('Capitolo 2')[0]
         output_text = re.sub(r'[ \t]+', ' ', output_text)
         output_text = re.sub(r'\n{3,}', '\n\n', output_text).strip()
 
         return output_text
 
     @staticmethod
-    def _extract_techniques_info(input_text: str) -> str:
-        output_text = input_text.split('Capitolo 3:')[1]
-        output_text = re.sub(r"[^a-zA-ZàèéìòóùÀÈÉÌÒÓÙ0-9.,;:!?()'\"\s]", '', output_text)
-        output_text = re.sub(r"([!?.,;:\-'])\1{2,}", r'\1\1', output_text)
-        output_text = re.sub(r'\b[^\w\s]{3,}\b', '', output_text)
-        output_text = re.sub(r'[ \t]+', ' ', output_text)
-        output_text = re.sub(r'\n{3,}', '\n\n', output_text).strip()
+    def _extract_techniques_info(document: PDF) -> Dict[str, str]:
+        extraction_flag, technique_category, techniques = False, None, {}
+        for page in document.pages:
+            lines = page.extract_text_lines()
+            for line in lines:
+                if 'Capitolo 3:' in line['text']:
+                    extraction_flag = True
+                if extraction_flag:
+                    if line['chars'][3]['size'] > 20:
+                        technique_category = line['text'].split(':')[1].strip()
+                    if 12 < line['chars'][3]['size'] < 14:
+                        techniques[line['text']] = technique_category
 
-        return output_text
+        return techniques
 
     @staticmethod
-    def _extract_techniques_reqs(input_text: str) -> str:
-        output_text = input_text.split('4 Licenze e Tecniche di Preparazione')[1].split('5 Sanzioni e Pene')[0]
+    def _extract_techniques_reqs(document: PDF) -> str:
+        document_content = ''
+        for page in document.pages:
+            if page_content := page.extract_text():
+                document_content += page_content
+        output_text = document_content.split('4 Licenze e Tecniche di Preparazione')[1].split('5 Sanzioni e Pene')[0]
         output_text = re.sub(r'[ \t]+', ' ', output_text)
         output_text = re.sub(r'\n{3,}', '\n\n', output_text)
         output_text = re.sub(r'789/\d{5} \d+° Giorno del Ciclo Cosmico 789', "", output_text).strip()
@@ -110,27 +122,32 @@ class KnowledgeBaseManager:
     def _extract_restaurant_info(restaurant_texts: List[DocItem]) -> List[str]:
         return [t.text for t in restaurant_texts]
 
-    def _extract_dishes_info(self, dishes_texts: List[DocItem]) -> List[List[str]]:
-        dishes_info, current_dish_info = [], []
+    def _extract_dishes_info(self, dishes_texts: List[DocItem]) -> Tuple[List[List[str]], List[bool]]:
+        current_dish_info, dishes_info = [], []
+        ingredients_flag, techniques_flag, dishes_flags = False, False, []
         for t in dishes_texts:
             if any([distance(t.text.lower(), dish_name.lower()) < 2 for dish_name in self.info.dishes_codes.keys()]):
                 if len(current_dish_info) > 0:
                     dishes_info.append(current_dish_info)
-                    current_dish_info = []
+                    dishes_flags.append(all([ingredients_flag, techniques_flag]))
+                    current_dish_info, ingredients_flag, techniques_flag = [], False, False
+            if distance(t.text.lower(), 'ingredienti') <= 1:
+                ingredients_flag = True
+            if distance(t.text.lower(), 'tecniche') <= 1 or distance(t.text.lower(), 'techniques') <= 1:
+                techniques_flag = True
             current_dish_info.append(t.text)
         dishes_info.append(current_dish_info)
 
-        return dishes_info
+        return dishes_info, dishes_flags
 
     @staticmethod
     def _populate_restaurant(restaurant_info: List[str]) -> Restaurant:
-        restaurant_name = re.sub(r'Ristorante:|Ristorante "|"', '', restaurant_info[0]).strip()
-        restaurant_planet = Planet.UNDISCLOSED
-        r_info = '\n'.join(restaurant_info).lower()
-        for p in Planet:
-            if p.value.lower() in r_info:
-                restaurant_planet = p
-                break
+        restaurant_name = RuleBasedParser.extract_restaurant_name(
+            input_text=restaurant_info
+        )
+        restaurant_planet = RuleBasedParser.extract_restaurant_planet(
+            input_text=restaurant_info
+        )
 
         return Restaurant(name=restaurant_name, planet=restaurant_planet)
 
@@ -145,19 +162,28 @@ class KnowledgeBaseManager:
 
         return Chef(name=chef_name, licenses=chef_licenses)
 
-    def _populate_dish(self, dishes_info: List[str]) -> Dish:
+    def _populate_dish(self, dishes_info: List[str], dishes_flag: bool) -> Dish:
         dish_code, dish_name = 0, ''
         for d_name, d_code in self.info.dishes_codes.items():
-            if distance(dishes_info[0], d_name) < 2:
+            if distance(dishes_info[0], d_name) <= 2:
                 dish_code, dish_name = d_code, d_name
                 break
-        dish_ingredients = self.llm_wrapper.extract_dish_ingredients(
-            input_text=(d_info_str := '\n'.join(dishes_info))
-        )
-        dish_techniques = self.llm_wrapper.extract_dish_techniques(
-            input_text=d_info_str,
-            additional_info=self.info.techniques_info
-        )
+        if dishes_flag:
+            dish_ingredients = RuleBasedParser.extract_dish_ingredients(
+                input_text=dishes_info
+            )
+            dish_techniques = RuleBasedParser.extract_dish_techniques_v1(
+                input_text=dishes_info,
+                additional_info=self.info.techniques_info
+            )
+        else:
+            dish_ingredients = self.llm_wrapper.extract_dish_ingredients(
+                input_text='\n'.join(dishes_info)
+            )
+            dish_techniques = RuleBasedParser.extract_dish_techniques_v2(
+                input_text=dishes_info,
+                additional_info=self.info.techniques_info
+            )
 
         return Dish(code=dish_code, name=dish_name, ingredients=dish_ingredients, techniques=dish_techniques)
 
@@ -174,24 +200,31 @@ class KnowledgeBaseManager:
         # extract dishes information
         menu_keyword_position = self._find_menu_keyword(menu=menu)
         if menu_keyword_position != -1:
+            # TODO: implement logic to handle orders.
+            # TODO: implement logic to handle noisy menus (Datapizza, L'Essenza delle Dune, Le Dimensioni del Gusto).
 
             # preprocess document content
             restaurant_info = self._extract_restaurant_info(restaurant_texts=menu.texts[0:menu_keyword_position])
-            dishes_info = self._extract_dishes_info(dishes_texts=menu.texts[(menu_keyword_position + 1):])
+            dishes_info, dishes_flags = self._extract_dishes_info(dishes_texts=menu.texts[(menu_keyword_position + 1):])
 
-            # extract restaurant and chef info
+            # extract restaurant
             restaurant = self._populate_restaurant(restaurant_info=restaurant_info)
+            logger.info(f'Currently Processing {restaurant.name}')
+
+            # extract chef info
             chef = self._populate_chef(restaurant_info=restaurant_info)
+            logger.info(f' - Chef Extracted: {chef.name}')
 
             # extract ingredients and techniques for each dish
-            for current_dish_info in dishes_info:
+            for current_dish_info, current_dish_flag in zip(dishes_info, dishes_flags):
                 augmented_dishes.append(
                     AugmentedDish(
                         restaurant=restaurant,
                         chef=chef,
-                        dish=self._populate_dish(dishes_info=current_dish_info)
+                        dish=self._populate_dish(dishes_info=current_dish_info, dishes_flag=current_dish_flag)
                     )
                 )
+                logger.info(f' - Dish Extracted: {augmented_dishes[-1].dish.name}')
 
         return augmented_dishes
 

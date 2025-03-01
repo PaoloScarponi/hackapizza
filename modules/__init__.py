@@ -1,5 +1,6 @@
 from .enums import *
 from .configs import *
 from .templates import *
-from .LLMWrapper import LLMWrapper
+from .LLMBasedParser import LLMBasedParser
+from .RuleBasedParser import RuleBasedParser
 from .KnowledgeBaseManager import KnowledgeBaseManager

@@ -4,6 +4,6 @@ from dataclasses import dataclass
 
 # class definition
 @dataclass
-class LLMConfig:
-    model_uri: str
-    model_name: str
+class LBPConfig:
+    ollama_server_uri: str
+    ollama_model_name: str

@@ -13,4 +13,3 @@ class Technique(BaseModel):
 
     name: str = Field(title='Technique Name', description='Name of the cooking technique.')
     category: TechniqueCategory = Field(title='Technique Category', description='Category of the cooking technique.')
-    subcategory: str = Field(default='', title='Technique Subcategory', description='Subcategory of the cooking technique.')

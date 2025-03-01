@@ -4,6 +4,6 @@ from enum import Enum
 
 # enumerate definition
 class TechniqueCategory(Enum):
-    PREPARATION = 'preparazione'
-    COOKING = 'cottura'
-    ADVANCED = 'avanzate'
+    PREPARATION = 'Tecniche di Preparazione'
+    COOKING = 'Tecniche di Cottura'
+    ADVANCED = 'Tecniche Avanzate'

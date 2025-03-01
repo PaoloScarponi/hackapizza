@@ -4,13 +4,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # internal modules import
-from modules import LLMConfig, LLMWrapper, KBMConfig, KnowledgeBaseManager
+from modules import LBPConfig, LLMBasedParser, KBMConfig, KnowledgeBaseManager
 
 
 # function definition
 def build_knowledge_base(kb_manager: KnowledgeBaseManager, menus_path: Path) -> None:
     for menu_path in menus_path.glob('*pkl'):
         kb_manager.memorize_dishes(augmented_dishes=kb_manager.process_menu(menu_path=menu_path))
+        menu_path.rename(menu_path.parent / 'done' / menu_path.name)
 
     return
 
@@ -30,10 +31,10 @@ if __name__ == '__main__':
             dishes_codes_path=Path(__file__).parent / 'data' / 'dish_mapping.json',
             kb_path=Path(__file__).parent / 'data' / 'processed' / 'dishes'
         ),
-        llm_wrapper=LLMWrapper(
-            config=LLMConfig(
-                model_uri=os.getenv('LLM_URI'),
-                model_name=os.getenv('KBM_LLM_NAME')
+        llm_wrapper=LLMBasedParser(
+            config=LBPConfig(
+                ollama_server_uri=os.getenv('OLLAMA_SERVER_URI'),
+                ollama_model_name=os.getenv('LBP_MODEL_NAME')
             )
         )
     )
