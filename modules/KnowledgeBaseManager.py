@@ -13,25 +13,19 @@ from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLab
 # internal modules import
 from .enums import Planet
 from .configs import KBMConfig
-from .LLMBasedParser import LLMBasedParser
-from .RuleBasedParser import RuleBasedParser
+from .parsers import RuleBasedParser, LLMBasedParser
 from .templates import Info, Restaurant, Chef, Dish, AugmentedDish
 
 
 # class definition
 class KnowledgeBaseManager:
+    """
+    This class implements all the capabilities to populate the Knowledge Base.
+
+    """
 
     # constructor
     def __init__(self, config: KBMConfig, llm_wrapper: LLMBasedParser):
-        """
-        This is the constructor for a generic Knowledge Base Manager object.
-
-        Parameters
-        ----------
-        config: KBMConfig
-            The object containing all the parameters to set up a specific object of this class.
-
-        """
 
         # initialize llm object and knowledge base path
         self.llm_wrapper = llm_wrapper

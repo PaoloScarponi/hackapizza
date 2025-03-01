@@ -26,6 +26,7 @@ def preprocess_menu(input_menus_path: Path, output_menus_path: Path) -> None:
             # TODO: make this check adaptive
             menu = create_docling_document(menu_path)
         else:
+            continue
             menu = DocumentConverter().convert(menu_path).document
         with open(output_menus_path / (menu_path.name[:-4] + '.pkl'), 'wb') as f:
             pickle.dump(menu, f)

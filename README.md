@@ -14,15 +14,9 @@ The sequence of operations required to produce the uploaded results are the foll
    did this to speed up the experimentation phase by avoiding extracting the content of each pdf multiple times.
 3. Execute the build_knowledge_base.py script to create the knowledge base, which consists of a set of json 
    descriptors, each containing the information of a single dish.
-4. ...
+4. Execute the query_knowledge_base.py script to submit all the test questions to the system and save the results.
 
 ## Improvements
-
-### Online Creation
-
-* Understand how to handle distances between planets.
-
-### Offline Phase
 
 * Understand the effect of not using ingredients categories and techniques subcategories on the performance.
 * Understand the effect of not updating the chef licenses based on dishes techniques.

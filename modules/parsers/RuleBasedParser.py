@@ -4,8 +4,8 @@ from typing import List, Dict
 from Levenshtein import distance
 
 # internal modules import
-from .enums import Planet, TechniqueCategory
-from .templates import Ingredient, IngredientsList, Technique, TechniquesList
+from ..enums import Planet, TechniqueCategory
+from ..templates import Ingredient, IngredientsList, Technique, TechniquesList
 
 
 # class definition

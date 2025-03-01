@@ -9,8 +9,8 @@ from langchain.output_parsers import PydanticOutputParser
 from langchain_core.exceptions import OutputParserException
 
 # internal modules import
-from .configs import LBPConfig
-from .templates import LicensesList, IngredientsList
+from ..configs import LBPConfig
+from ..templates import LicensesList, IngredientsList
 
 
 # class definition
