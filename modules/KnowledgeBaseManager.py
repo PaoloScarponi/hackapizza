@@ -120,7 +120,7 @@ class KnowledgeBaseManager:
         current_dish_info, dishes_info = [], []
         ingredients_flag, techniques_flag, dishes_flags = False, False, []
         for t in dishes_texts:
-            if any([distance(t.text.lower(), dish_name.lower()) < 2 for dish_name in self.info.dishes_codes.keys()]):
+            if any([distance(t.text.lower(), dish_name.lower()) <= 3 for dish_name in self.info.dishes_codes.keys()]):
                 if len(current_dish_info) > 0:
                     dishes_info.append(current_dish_info)
                     dishes_flags.append(all([ingredients_flag, techniques_flag]))
@@ -130,6 +130,7 @@ class KnowledgeBaseManager:
             if distance(t.text.lower(), 'tecniche') <= 1 or distance(t.text.lower(), 'techniques') <= 1:
                 techniques_flag = True
             current_dish_info.append(t.text)
+        dishes_flags.append(all([ingredients_flag, techniques_flag]))
         dishes_info.append(current_dish_info)
 
         return dishes_info, dishes_flags

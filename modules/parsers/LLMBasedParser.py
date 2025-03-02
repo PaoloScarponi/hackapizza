@@ -20,7 +20,7 @@ class LLMBasedParser:
     def __init__(self, config: LBPConfig):
 
         # initialize llm object
-        self.model = OllamaLLM(model=config.ollama_model_name, base_url=config.ollama_server_uri)
+        self.model = OllamaLLM(model=config.ollama_model_name, base_url=config.ollama_server_uri, temperature=0.1)
 
     # decorators
     @staticmethod

@@ -20,9 +20,7 @@ The sequence of operations required to produce the uploaded results are the foll
 
 ### Pre-Submission
 
-* Understand which dishes are skipped and why.
 * Understand how to correctly process "Tutti a TARSvola" menu.
-* Test the ingestion workaround for "Datapizza", "L Essenza delle Dune", and "Le Dimensioni del Gusto".
 * Generate the whole knowledge base again.
 * Make the filters checks fuzzy at question-answering time.
 
