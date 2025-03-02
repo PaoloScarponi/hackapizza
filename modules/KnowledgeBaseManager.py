@@ -122,7 +122,7 @@ class KnowledgeBaseManager:
         for t in dishes_texts:
             if distance(t.text.lower(), 'legenda ordini professionali gastronomici') <= 3:
                 break
-            if any([distance(t.text.lower(), dish_name.lower()) <= 3 for dish_name in self.info.dishes_codes.keys()]):
+            if any([distance(t.text.lower(), dish_name.lower()) <= 2 for dish_name in self.info.dishes_codes.keys()]):
                 if len(current_dish_info) > 0:
                     dishes_info.append(current_dish_info)
                     dishes_flags.append(all([ingredients_flag, techniques_flag]))
