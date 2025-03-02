@@ -14,7 +14,7 @@ from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLab
 from .enums import Planet
 from .configs import KBMConfig
 from .parsers import RuleBasedParser, LLMBasedParser
-from .templates import Info, Restaurant, Chef, Dish, AugmentedDish
+from .templates import KBMInfo, Restaurant, Chef, Dish, AugmentedDish
 
 
 # class definition
@@ -40,7 +40,7 @@ class KnowledgeBaseManager:
         logger.info('The Galactic Code of Conduct has been loaded.')
 
         # initialize supporting info object
-        self.info = Info(
+        self.info = KBMInfo(
             planets_names=[x.value for x in Planet],
             licenses_info=self._extract_licenses_info(manual),                  # not used at the moment
             techniques_info=self._extract_techniques_info(manual),

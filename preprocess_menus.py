@@ -22,11 +22,11 @@ def create_docling_document(input_pdf_path) -> DoclingDocument:
 # main function definition
 def preprocess_menu(input_menus_path: Path, output_menus_path: Path) -> None:
     for menu_path in input_menus_path.glob('*pdf'):
+        # TODO: make this check adaptive
         if menu_path.name.split('.')[0] in ['Datapizza', 'L Essenza delle Dune', 'Le Dimensioni del Gusto']:
-            # TODO: make this check adaptive
             menu = create_docling_document(menu_path)
         else:
-            continue
+            # DEBUG: continue
             menu = DocumentConverter().convert(menu_path).document
         with open(output_menus_path / (menu_path.name[:-4] + '.pkl'), 'wb') as f:
             pickle.dump(menu, f)

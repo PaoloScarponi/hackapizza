@@ -4,9 +4,9 @@ from pydantic import BaseModel, Field
 
 
 # template definition
-class Info(BaseModel):
+class KBMInfo(BaseModel):
     """
-    This class models the information that are contained in the cooking manual and the galactic code of conduct.
+    This class models is meant to store the support information for the Knowledge Base Manager.
     """
 
     planets_names: List[str] = Field(title='Planet Names', description='A list of all the available planets.')

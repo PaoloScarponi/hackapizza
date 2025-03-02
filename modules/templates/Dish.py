@@ -31,17 +31,17 @@ class Dish(BaseModel):
         description='The list of techniques used to cook the dish.'
     )
     andromeda_flag: bool = Field(
-        default=True,
+        default=False,
         title='Andromeda Order Flag',
         description='A boolean flag indicating if the dish can be eaten by people of the Andromeda Order.'
     )
     armonisti_flag: bool = Field(
-        default=True,
+        default=False,
         title='Armonisti Order Flag',
         description='A boolean flag indicating if the dish can be eaten by people of the Armonisti Order.'
     )
     naturalisti_flag: bool = Field(
-        default=True,
+        default=False,
         title='Naturalisti Order Flag',
         description='A boolean flag indicating if the dish can be eaten by people of the Naturalisti Order.'
     )

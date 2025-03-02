@@ -1,4 +1,5 @@
-from .Info import Info
+from .KBMInfo import KBMInfo
+from .QMInfo import QMInfo
 from .Restaurant import Restaurant
 from .Chef import Chef
 from .License import License

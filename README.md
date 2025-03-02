@@ -16,7 +16,17 @@ The sequence of operations required to produce the uploaded results are the foll
    descriptors, each containing the information of a single dish.
 4. Execute the query_knowledge_base.py script to submit all the test questions to the system and save the results.
 
-## Improvements
+## Improvements & TODOs
+
+### Pre-Submission
+
+* Understand which dishes are skipped and why.
+* Understand how to correctly process "Tutti a TARSvola" menu.
+* Test the ingestion workaround for "Datapizza", "L Essenza delle Dune", and "Le Dimensioni del Gusto".
+* Generate the whole knowledge base again.
+* Make the filters checks fuzzy at question-answering time.
+
+### Post-Submission
 
 * Understand the effect of not using ingredients categories and techniques subcategories on the performance.
 * Understand the effect of not updating the chef licenses based on dishes techniques.
