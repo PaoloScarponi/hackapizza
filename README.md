@@ -24,13 +24,7 @@ The sequence of operations required to produce the uploaded results are the foll
    descriptors, each containing the information of a single dish.
 4. Execute the query_knowledge_base.py script to submit all the test questions to the system and save the results.
 
-## Improvements & TODOs
-
-### Pre-Submission
-
-* Double-check for missing dishes and understand why they get lost.
-
-### Post-Submission
+## Potential Post-Submission Improvements
 
 * Understand the effect of not using ingredients categories and techniques subcategories on the performance.
 * Understand the effect of not updating the chef licenses based on dishes techniques.

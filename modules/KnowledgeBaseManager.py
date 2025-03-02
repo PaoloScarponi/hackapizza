@@ -172,6 +172,7 @@ class KnowledgeBaseManager:
     def _populate_dish(self, dishes_info: List[str], dishes_flag: bool) -> Dish:
         dish_code, dish_name = -1, ''
         for d_name, d_code in self.info.dishes_codes.items():
+            # TODO: make this fuzzy match more robust to avoid making mistakes on very similar names (e.g, 73, 75, 216, 242.)
             if distance(dishes_info[0], d_name) <= 2:
                 dish_code, dish_name = d_code, d_name
                 break
