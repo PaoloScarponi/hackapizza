@@ -11,8 +11,8 @@ from typing import List, Tuple, Dict
 from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLabel
 
 # internal modules import
-from .enums import Planet
 from .configs import KBMConfig
+from .enums import Planet, Order
 from .parsers import RuleBasedParser, LLMBasedParser
 from .templates import KBMInfo, Restaurant, Chef, Dish, AugmentedDish
 
@@ -42,7 +42,7 @@ class KnowledgeBaseManager:
         # initialize supporting info object
         self.info = KBMInfo(
             planets_names=[x.value for x in Planet],
-            licenses_info=self._extract_licenses_info(manual),                  # not used at the moment
+            licenses_info=self._extract_licenses_info(manual),
             techniques_info=self._extract_techniques_info(manual),
             techniques_reqs=self._extract_techniques_reqs(code),                # not used at the moment
             dishes_codes=self._load_dishes_codes(config.dishes_codes_path)
@@ -120,6 +120,8 @@ class KnowledgeBaseManager:
         current_dish_info, dishes_info = [], []
         ingredients_flag, techniques_flag, dishes_flags = False, False, []
         for t in dishes_texts:
+            if distance(t.text.lower(), 'legenda ordini professionali gastronomici') <= 3:
+                break
             if any([distance(t.text.lower(), dish_name.lower()) <= 3 for dish_name in self.info.dishes_codes.keys()]):
                 if len(current_dish_info) > 0:
                     dishes_info.append(current_dish_info)
@@ -151,13 +153,13 @@ class KnowledgeBaseManager:
             input_text=(r_info_str := '\n'.join(restaurant_info))
         )
         chef_licenses = self.llm_based_parser.extract_chef_licenses(
-            input_text=r_info_str
+            input_text=r_info_str,
+            additional_info=self.info.licenses_info
         )
 
         return Chef(name=chef_name, licenses=chef_licenses)
 
     def _populate_dish(self, dishes_info: List[str], dishes_flag: bool) -> Dish:
-        # TODO: implement logic to handle orders.
         dish_code, dish_name = 0, ''
         for d_name, d_code in self.info.dishes_codes.items():
             if distance(dishes_info[0], d_name) <= 2:
@@ -180,7 +182,15 @@ class KnowledgeBaseManager:
                 additional_info=self.info.techniques_info
             )
 
-        return Dish(code=dish_code, name=dish_name, ingredients=dish_ingredients, techniques=dish_techniques)
+        return Dish(
+            code=dish_code,
+            name=dish_name,
+            ingredients=dish_ingredients,
+            techniques=dish_techniques,
+            andromeda_flag = True if Order.ANDROMEDA.value in dishes_info[0] else False,
+            armonisti_flag = True if Order.ARMONISTI.value in dishes_info[0] else False,
+            naturalisti_flag = True if Order.NATURALISTI.value in dishes_info[0] else False
+        )
 
     # public methods
     def process_menu(self, menu_path: Path) -> List[AugmentedDish]:
@@ -194,36 +204,38 @@ class KnowledgeBaseManager:
 
         # extract dishes information
         menu_keyword_position = self._find_menu_keyword(menu=menu)
-        if menu_keyword_position != -1:
+        if menu_keyword_position == -1:
+            logger.warning('Skipped Current Menu')
+            return []
 
-            # preprocess document content
-            restaurant_info = self._extract_restaurant_info(restaurant_texts=menu.texts[0:menu_keyword_position])
-            dishes_info, dishes_flags = self._extract_dishes_info(dishes_texts=menu.texts[(menu_keyword_position + 1):])
+        # preprocess document content
+        restaurant_info = self._extract_restaurant_info(restaurant_texts=menu.texts[0:menu_keyword_position])
+        dishes_info, dishes_flags = self._extract_dishes_info(dishes_texts=menu.texts[(menu_keyword_position + 1):])
 
-            # extract restaurant
-            restaurant = self._populate_restaurant(restaurant_info=restaurant_info)
-            logger.info(f'Currently Processing {restaurant.name}')
+        # extract restaurant
+        restaurant = self._populate_restaurant(restaurant_info=restaurant_info)
+        logger.info(f'Currently Processing {restaurant.name}')
 
-            # extract chef info
-            chef = self._populate_chef(restaurant_info=restaurant_info)
-            logger.info(f' - Chef Extracted: {chef.name}')
+        # extract chef info
+        chef = self._populate_chef(restaurant_info=restaurant_info)
+        logger.info(f' - Chef Extracted: {chef.name}')
 
-            # extract ingredients and techniques for each dish
-            for current_dish_info, current_dish_flag in zip(dishes_info, dishes_flags):
-                augmented_dishes.append(
-                    AugmentedDish(
-                        restaurant=restaurant,
-                        chef=chef,
-                        dish=self._populate_dish(dishes_info=current_dish_info, dishes_flag=current_dish_flag)
-                    )
+        # extract ingredients and techniques for each dish
+        for current_dish_info, current_dish_flag in zip(dishes_info, dishes_flags):
+            augmented_dishes.append(
+                AugmentedDish(
+                    restaurant=restaurant,
+                    chef=chef,
+                    dish=self._populate_dish(dishes_info=current_dish_info, dishes_flag=current_dish_flag)
                 )
-                logger.info(f' - Dish Extracted: {augmented_dishes[-1].dish.name}')
+            )
+            logger.info(f' - Dish Extracted: {augmented_dishes[-1].dish.name}')
 
         return augmented_dishes
 
     def memorize_dishes(self, augmented_dishes: List[AugmentedDish]) -> None:
         for ad in augmented_dishes:
-            with open(self.kb_path / (str(ad.dish.code) + '.json'), 'w') as f:
+            with open(self.kb_path / (str(ad.dish.code) + '.json'), 'w', encoding='utf-8') as f:
                 f.write(ad.model_dump_json(indent=4))
 
         return

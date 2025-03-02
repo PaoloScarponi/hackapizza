@@ -10,8 +10,9 @@ from modules import LBPConfig, LLMBasedParser, KBMConfig, KnowledgeBaseManager
 # function definition
 def build_knowledge_base(kb_manager: KnowledgeBaseManager, menus_path: Path) -> None:
     for menu_path in menus_path.glob('*.pkl'):
-        kb_manager.memorize_dishes(augmented_dishes=kb_manager.process_menu(menu_path=menu_path))
-        menu_path.rename(menu_path.parent / 'done' / menu_path.name)
+        kb_manager.memorize_dishes(augmented_dishes=(adl := kb_manager.process_menu(menu_path=menu_path)))
+        if len(adl):
+            menu_path.rename(menu_path.parent / 'done' / menu_path.name)
 
     return
 

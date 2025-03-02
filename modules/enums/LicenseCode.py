@@ -4,11 +4,12 @@ from enum import Enum
 
 # enumerate definition
 class LicenseCode(Enum):
-    P = 'P'
-    T = 't'
-    G = 'G'
-    A = 'e+'
-    M = 'Mx'
-    Q = 'Q'
-    L = 'c'
-    LTK = 'LTK'
+    PSIONICA = 'P'
+    TEMPORALE = 't'
+    GRAVITAZINALE = 'G'
+    ANTIMATERIA = 'e+'
+    MAGNETICA = 'Mx'
+    QUANTISTICA = 'Q'
+    QUANTICA = 'Q'
+    LUCE = 'c'
+    LIVELLO_DI_SVILUPPO_TECNOLOGICO = 'LTK'

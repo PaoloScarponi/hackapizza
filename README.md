@@ -2,6 +2,14 @@
 
 This project contains the code for the Kaggle Challenge [Hackapizza 2025 - Community Edition](https://www.kaggle.com/competitions/hackapizza-2025-community).
 
+## Manual Preprocessing Steps
+
+We applied some simple manual pre-processing step to simplify the data ingestion step:
+
+* Compressed Datapizza Menu from ~50MB to 2~MB.
+* Updated some names in the dish_mapping file to compensate for inconsistencies.
+  * "Sinfonia Astrale" -> "Sinfonia Astrale - Risotto Multiversale con Risacca Celeste"
+
 ## Instructions 
 
 The sequence of operations required to produce the uploaded results are the following:
@@ -20,9 +28,9 @@ The sequence of operations required to produce the uploaded results are the foll
 
 ### Pre-Submission
 
-* Understand how to correctly process "Tutti a TARSvola" menu.
-* Generate the whole knowledge base again.
-* Make the filters checks fuzzy at question-answering time.
+* Generate the whole knowledge base again, fix issues if needed, and double-check for missing dishes.
+* Implement baseline query mechanism submitting all knowledge base and the question directly to the LLM.
+* Make the filters checks fuzzy at question-answering time (if needed).
 
 ### Post-Submission
 

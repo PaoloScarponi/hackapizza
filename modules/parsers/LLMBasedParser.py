@@ -75,7 +75,7 @@ class LLMBasedParser:
         return chef_name
 
     @retry_on_exception(max_retries=5, delay=1)
-    def extract_chef_licenses(self, input_text: str) -> LicensesList:
+    def extract_chef_licenses(self, input_text: str, additional_info: str) -> LicensesList:
 
         # initialize output parser
         parser = PydanticOutputParser(pydantic_object=LicensesList)
@@ -89,11 +89,14 @@ class LLMBasedParser:
                 'Make sure the output is fully compliant with the provided JSON schema. In particular:\n'
                 '* ALWAYS specify all the attributes for every extracted license.\n'
                 '* USE ONLY names and codes available in the schema, DO NOT invent them. If you find any name or code'
-                'that is not in the schema, map it to the most plausible one in the schema.\n\n'
+                'that is not in the schema, map it to the most plausible one in the schema.\n'
+                'In case you have doubts about the mapping between names and codes, you can check this additional info:\n'
+                '{additional_info}\n\n'
                 'Text: {input_text}'
             ),
             input_variables=[
-                'input_text'
+                'input_text',
+                'additional_info'
             ],
             partial_variables={
                 'format_instructions': parser.get_format_instructions()
@@ -103,7 +106,8 @@ class LLMBasedParser:
         # query llm
         licenses_list = (prompt | self.model | parser).invoke(
             {
-                'input_text': input_text
+                'input_text': input_text,
+                'additional_info': additional_info
             }
         )
 
