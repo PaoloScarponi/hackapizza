@@ -35,11 +35,13 @@ class LLMBasedParser:
                     try:
                         return func(self, *args, **kwargs)
                     except OutputParserException as e:
-                        logger.info(f'Retrying {func.__name__} Execution')
+                        logger.warning(f'{func.__name__} Execution Failed.')
                         attempts += 1
                         if attempts < max_retries_:
+                            logger.warning(f'Retrying {func.__name__} Execution.')
                             time.sleep(delay_)
                         else:
+                            logger.warning(f'Giving Up {func.__name__} Execution.')
                             raise e
 
             return wrapper
@@ -108,6 +110,41 @@ class LLMBasedParser:
             {
                 'input_text': input_text,
                 'additional_info': additional_info
+            }
+        )
+
+        return licenses_list
+
+    @retry_on_exception(max_retries=5, delay=1)
+    def extract_chef_licenses_simplified(self, input_text: str) -> LicensesList:
+
+        # initialize output parser
+        parser = PydanticOutputParser(pydantic_object=LicensesList)
+
+        # build prompt
+        prompt = PromptTemplate(
+            template=(
+                'You are an advanced document parser that extracts the licenses of a chef from a text written in italian.\n'
+                'Extract the licenses from the given text and output in JSON format:\n'
+                '{format_instructions}\n'
+                'Make sure the output is fully compliant with the provided JSON schema. In particular:\n'
+                '* ALWAYS specify all the attributes for every extracted license.\n'
+                '* USE ONLY names and codes available in the schema, DO NOT invent them. If you find any name or code'
+                'that is not in the schema, map it to the most plausible one in the schema.\n'
+                'Text: {input_text}'
+            ),
+            input_variables=[
+                'input_text',
+            ],
+            partial_variables={
+                'format_instructions': parser.get_format_instructions()
+            }
+        )
+
+        # query llm
+        licenses_list = (prompt | self.model | parser).invoke(
+            {
+                'input_text': input_text,
             }
         )
 

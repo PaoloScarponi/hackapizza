@@ -1,9 +1,10 @@
 # external modules import
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 
 # internal modules import
-from modules import QMConfig, QueryManager
+from modules import QAConfig, QueryAgent, QMConfig, QueryManager
 
 
 # function definition
@@ -27,6 +28,12 @@ if __name__ == '__main__':
         config=QMConfig(
             kb_path=Path(__file__).parent / 'data' / 'processed' / 'dishes',
             planet_distances_path=Path(__file__).parent / 'data' / 'planets_distances.csv',
+        ),
+        query_agent=QueryAgent(
+            config=QAConfig(
+                ollama_server_uri=os.getenv('OLLAMA_SERVER_URI'),
+                ollama_model_name=os.getenv('LBP_MODEL_NAME')
+            )
         )
     )
 

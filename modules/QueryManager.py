@@ -7,7 +7,8 @@ from typing import List, Dict
 # internal modules import
 from .enums import Planet
 from .configs import QMConfig
-from .templates import QMInfo, AugmentedDish, Restaurant, License, Ingredient, IngredientsList, Technique, TechniquesList
+from .QueryAgent import QueryAgent
+from .templates import QMInfo, AugmentedDish, Restaurant, License, Ingredient, IngredientsList, Technique, TechniquesList, Answer
 
 
 # class definition
@@ -18,7 +19,10 @@ class QueryManager:
     """
 
     # constructor
-    def __init__(self, config: QMConfig):
+    def __init__(self, config: QMConfig, query_agent: QueryAgent):
+
+        # initialize query agent object
+        self.query_agent = query_agent
 
         # load knowledge base into memory
         self.knowledge_base = self._load_knowledge_base(config.kb_path)
@@ -53,10 +57,10 @@ class QueryManager:
         return planets_distances
 
     def _extract_ingredients_list(self) -> IngredientsList:
-        pass
+        return IngredientsList(items=[])
 
     def _extract_techniques_list(self) -> TechniquesList:
-        pass
+        return TechniquesList(items=[])
 
     @staticmethod
     def _filter_dishes_by_restaurant(input_dishes: List[AugmentedDish], restaurant: Restaurant) -> List[AugmentedDish]:
@@ -89,8 +93,16 @@ class QueryManager:
         return output_dishes
 
     # public methods
-    def answer_question(self, question: str) -> List[int]:
-        pass
+    def answer_question(self, question: str) -> Answer:
+        return self.query_agent.answer_question(
+            question=question,
+            knowledge_base=self.knowledge_base,
+            planets_distances=self.info.planets_distances
+        )
 
-    def memorize_answers(self, answers: Dict[int, List[int]]) -> None:
-        pass
+    @staticmethod
+    def memorize_answers(answers: Dict[int, Answer]) -> None:
+        with open(Path(__file__).parent.parent / 'data' / 'test_answers.json', 'w', encoding='utf-8') as f:
+            json.dump({k: v.dishes_codes for k, v in answers}, f, indent=4)
+
+        return

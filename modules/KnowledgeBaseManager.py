@@ -8,6 +8,7 @@ from loguru import logger
 from pdfplumber.pdf import PDF
 from Levenshtein import distance
 from typing import List, Tuple, Dict
+from langchain_core.exceptions import OutputParserException
 from docling_core.types.doc.document import DoclingDocument, DocItem, DocItemLabel
 
 # internal modules import
@@ -117,7 +118,7 @@ class KnowledgeBaseManager:
         return [t.text for t in restaurant_texts]
 
     def _extract_dishes_info(self, dishes_texts: List[DocItem]) -> Tuple[List[List[str]], List[bool]]:
-        current_dish_info, dishes_info = [], []
+        current_dish_info, dishes_info, start_flag = [], [], False
         ingredients_flag, techniques_flag, dishes_flags = False, False, []
         for t in dishes_texts:
             if distance(t.text.lower(), 'legenda ordini professionali gastronomici') <= 3:
@@ -127,11 +128,14 @@ class KnowledgeBaseManager:
                     dishes_info.append(current_dish_info)
                     dishes_flags.append(all([ingredients_flag, techniques_flag]))
                     current_dish_info, ingredients_flag, techniques_flag = [], False, False
+                else:
+                    start_flag = True
             if distance(t.text.lower(), 'ingredienti') <= 1:
                 ingredients_flag = True
             if distance(t.text.lower(), 'tecniche') <= 1 or distance(t.text.lower(), 'techniques') <= 1:
                 techniques_flag = True
-            current_dish_info.append(t.text)
+            if start_flag:
+                current_dish_info.append(t.text)
         dishes_flags.append(all([ingredients_flag, techniques_flag]))
         dishes_info.append(current_dish_info)
 
@@ -152,15 +156,21 @@ class KnowledgeBaseManager:
         chef_name = self.llm_based_parser.extract_chef_name(
             input_text=(r_info_str := '\n'.join(restaurant_info))
         )
-        chef_licenses = self.llm_based_parser.extract_chef_licenses(
-            input_text=r_info_str,
-            additional_info=self.info.licenses_info
-        )
+        try:
+            chef_licenses = self.llm_based_parser.extract_chef_licenses(
+                input_text=r_info_str,
+                additional_info=self.info.licenses_info
+            )
+        except OutputParserException:
+            logger.warning('Standard Prompting Strategy Failed. Switching to Alternative Prompt Strategy.')
+            chef_licenses = self.llm_based_parser.extract_chef_licenses_simplified(
+                input_text=r_info_str
+            )
 
         return Chef(name=chef_name, licenses=chef_licenses)
 
     def _populate_dish(self, dishes_info: List[str], dishes_flag: bool) -> Dish:
-        dish_code, dish_name = 0, ''
+        dish_code, dish_name = -1, ''
         for d_name, d_code in self.info.dishes_codes.items():
             if distance(dishes_info[0], d_name) <= 2:
                 dish_code, dish_name = d_code, d_name

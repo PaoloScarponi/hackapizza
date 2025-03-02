@@ -28,9 +28,7 @@ The sequence of operations required to produce the uploaded results are the foll
 
 ### Pre-Submission
 
-* Generate the whole knowledge base again, fix issues if needed, and double-check for missing dishes.
-* Implement baseline query mechanism submitting all knowledge base and the question directly to the LLM.
-* Make the filters checks fuzzy at question-answering time (if needed).
+* Double-check for missing dishes and understand why they get lost.
 
 ### Post-Submission
 
