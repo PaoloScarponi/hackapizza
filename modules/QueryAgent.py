@@ -43,7 +43,7 @@ class QueryAgent:
             input_variables=[
                 'question',
                 'knowledge_base',
-                'planet_distances'
+                'planets_distances'
             ],
             partial_variables={
                 'format_instructions': parser.get_format_instructions()
@@ -55,7 +55,7 @@ class QueryAgent:
             {
                 'question': question,
                 'knowledge_base': '\n'.join([d.model_dump_json(indent=2) for d in knowledge_base]),
-                'planet_distances': json.dumps(planets_distances, indent=2)
+                'planets_distances': json.dumps({k.value: {kk.value: vv for kk, vv in v.items()} for k, v in planets_distances.items()}, indent=2)
             }
         )
 
