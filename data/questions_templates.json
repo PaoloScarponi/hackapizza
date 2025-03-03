@@ -1,29 +1,12 @@
 {
-	"ingredients": [
-		"Quali piatti contengono <ingredienti>?",
-		"Quali piatti NON contengono <ingredienti>?"
-	],
-	"techniques": [
-		"Quali piatti sono preparati utilizzando <tecniche>?",
-		"Quali piatti NON sono preparati utilizzando <tecniche>?"
-	],
-	"orders": [
-		"Quali piatti sono adatti per <ordini>?",
-		"Quali piatti NON sono adatti per <ordini>?"
-	],
-	"licenses": [
-		"Quali piatti sono preparati da chef con <licenze>?"
-	],
-	"restaurants": [
-		"Quali piatti sono preparati in <ristoranti>?"
-	],
-	"planets": [
-		"Quali piatti sono preparati su <pianeta>?"
-	],
-	"distances": [
-		"Quali piatti sono preparati entro <distanza> da <pianeta>?"
-	],
-	"limits": [
-		"Quali piatti rispettano i limiti di legge per tutti gli ingredienti?"
-	]
+	"Quali piatti contengono <ingredienti>?": 0,
+	"Quali piatti NON contengono <ingredienti>?": 1,
+	"Quali piatti sono preparati utilizzando <tecniche>?": 2,
+	"Quali piatti NON sono preparati utilizzando <tecniche>?": 3,
+	"Quali piatti sono adatti per <ordini>?": 4,
+	"Quali piatti NON sono adatti per <ordini>?": 5,
+	"Quali piatti sono preparati da chef con <licenze>?": 6,
+	"Quali piatti sono preparati in <ristoranti>?": 7,
+	"Quali piatti sono preparati su <pianeta>?": 8,
+	"Quali piatti sono preparati entro <distanza> da <pianeta>?": 9
 }

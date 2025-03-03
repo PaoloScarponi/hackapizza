@@ -28,6 +28,7 @@ if __name__ == '__main__':
         config=QMConfig(
             kb_path=Path(__file__).parent / 'data' / 'processed' / 'dishes',
             planet_distances_path=Path(__file__).parent / 'data' / 'planets_distances.csv',
+            questions_templates_path=Path(__file__).parent / 'data' / 'questions_templates.json'
         ),
         query_agent=QueryAgent(
             config=QAConfig(

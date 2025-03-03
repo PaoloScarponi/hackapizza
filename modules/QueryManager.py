@@ -29,6 +29,7 @@ class QueryManager:
 
         # initialize supporting info object
         self.info = QMInfo(
+            questions_templates=self._load_questions_templates(config.questions_templates_path),
             planets_distances=self._load_planets_distances(config.planet_distances_path),
             ingredients_list=self._extract_ingredients_list(),
             techniques_list=self._extract_techniques_list()
@@ -36,10 +37,17 @@ class QueryManager:
 
     # non-public methods
     @staticmethod
+    def _load_questions_templates(file_path: Path) -> Dict[str, int]:
+        with open(file_path, 'r') as file:
+            questions_templates = json.load(file)
+
+        return questions_templates
+
+    @staticmethod
     def _load_knowledge_base(file_path: Path) -> List[AugmentedDish]:
         knowledge_base = []
         for dish_path in file_path.glob('*.json'):
-            with open(dish_path, 'r') as file:
+            with open(dish_path, 'r', encoding='utf-8') as file:
                 knowledge_base.append(AugmentedDish(**json.load(file)))
 
         return knowledge_base
@@ -57,10 +65,18 @@ class QueryManager:
         return planets_distances
 
     def _extract_ingredients_list(self) -> IngredientsList:
-        return IngredientsList(items=[])
+        ingredients = []
+        for ad in self.knowledge_base:
+            ingredients.extend(ad.dish.ingredients.items)
+
+        return IngredientsList(items=ingredients)
 
     def _extract_techniques_list(self) -> TechniquesList:
-        return TechniquesList(items=[])
+        techniques = []
+        for ad in self.knowledge_base:
+            techniques.extend(ad.dish.techniques.items)
+
+        return TechniquesList(items=techniques)
 
     @staticmethod
     def _filter_dishes_by_restaurant(input_dishes: List[AugmentedDish], restaurant: Restaurant) -> List[AugmentedDish]:
@@ -94,6 +110,12 @@ class QueryManager:
 
     # public methods
     def answer_question(self, question: str) -> Answer:
+        # 1. Understand subquestions types.
+        # 2. Understand the relationships between subquestions (AND/OR).
+        # 3. Extract parameters for each subquestion.
+        # 4. Execute query for each subquestion.
+        # 5. Combine results based on subquestions relationships.
+
         return self.query_agent.answer_question(
             question=question,
             knowledge_base=self.knowledge_base,
