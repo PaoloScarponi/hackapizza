@@ -8,7 +8,6 @@ class KBMInfo(BaseModel):
     """
     This class models is meant to store the support information for the Knowledge Base Manager.
     """
-
     planets_names: List[str] = Field(title='Planet Names', description='A list of all the available planets.')
     licenses_info: str = Field(title='Licenses Info', description='A string containing the info about cooking licenses.')
     techniques_info: dict = Field(title='Techniques Info', description='A dictionary containing the info about cooking techniques.')

@@ -11,5 +11,4 @@ class IngredientsList(BaseModel):
     """
     This class models a list of ingredients.
     """
-
     items: List[Ingredient] = Field(title='Ingredients List', description='A list of ingredients.')

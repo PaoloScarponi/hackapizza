@@ -8,7 +8,7 @@ from typing import List, Dict
 from .enums import Planet
 from .configs import QMConfig
 from .QueryAgent import QueryAgent
-from .templates import QMInfo, AugmentedDish, Restaurant, License, Ingredient, IngredientsList, Technique, TechniquesList, Answer
+from .templates import QMInfo, AugmentedDish, Restaurant, License, Ingredient, IngredientsList, Technique, TechniquesList, Question, Answer
 
 
 # class definition
@@ -78,6 +78,13 @@ class QueryManager:
 
         return TechniquesList(items=techniques)
 
+    def _understand_subquestions_types(self, question: str) -> Question:
+        return self.query_agent.build_question_object(
+            question=question,
+            ingredients=self.info.ingredients_list,
+            planets_distances=self.info.planets_distances
+        )
+
     @staticmethod
     def _filter_dishes_by_restaurant(input_dishes: List[AugmentedDish], restaurant: Restaurant) -> List[AugmentedDish]:
         return [ad for ad in input_dishes if restaurant.name == ad.restaurant.name]
@@ -110,11 +117,13 @@ class QueryManager:
 
     # public methods
     def answer_question(self, question: str) -> Answer:
-        # 1. Understand subquestions types.
+
+        # Understand subquestions types and parameters.
+        question_object = self._understand_subquestions_types(question=question)
+
         # 2. Understand the relationships between subquestions (AND/OR).
-        # 3. Extract parameters for each subquestion.
-        # 4. Execute query for each subquestion.
-        # 5. Combine results based on subquestions relationships.
+        # 3. Execute query for each subquestion.
+        # 4. Combine results based on subquestions relationships.
 
         return self.query_agent.answer_question(
             question=question,

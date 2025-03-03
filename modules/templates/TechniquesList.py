@@ -11,5 +11,4 @@ class TechniquesList(BaseModel):
     """
     This class models a list of cooking techniques.
     """
-
     items: List[Technique] = Field(title='Techniques List', description='A list of cooking techniques.')

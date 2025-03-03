@@ -11,9 +11,7 @@ from .TechniquesList import TechniquesList
 class Dish(BaseModel):
     """
     This class models a dish.
-
     """
-
     code: int = Field(
         title='Dish Code',
         description='The code of the dish.'

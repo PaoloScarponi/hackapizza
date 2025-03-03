@@ -10,4 +10,5 @@ from .Technique import Technique
 from .TechniquesList import TechniquesList
 from .Dish import Dish
 from .AugmentedDish import AugmentedDish
+from .Question import Question
 from .Answer import Answer
