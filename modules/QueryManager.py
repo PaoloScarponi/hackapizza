@@ -1,5 +1,6 @@
 # external modules import
 import csv
+import copy
 import json
 from pathlib import Path
 from loguru import logger
@@ -8,8 +9,8 @@ from typing import List, Dict, Tuple
 # internal modules import
 from .configs import QMConfig
 from .agents import QueryAgent
-from .enums import Planet, LicenseName, LicenseCode
-from .templates import QMInfo, AugmentedDish, Restaurant, License, Ingredient, IngredientsList, Technique, TechniquesList, Question, Answer
+from .enums import Planet, LicenseName, LicenseCode, LogicalOperator
+from .templates import QMInfo, AugmentedDish, Restaurant, License, Ingredient, IngredientsList, Technique, TechniquesList, Question, QuestionLogics, Answer
 
 
 # class definition
@@ -92,6 +93,7 @@ class QueryManager:
         return restaurants
 
     def _understand_question(self, question: str) -> Question:
+        # TODO: implement the logic to understand orders
         base_question = self.query_agent.build_base_question_object(
             question=question,
             ingredients=self.info.ingredients_list,
@@ -102,9 +104,49 @@ class QueryManager:
             question=question,
             restaurants=self.info.restaurants_list
         )
-        # TODO: add licenses extraction step
+        licenses = self.query_agent.find_licenses(question=question)
 
-        return Question(**base_question.model_dump(), restaurants=restaurants)
+        return Question(**base_question.model_dump(), restaurants=restaurants, chef_licenses=licenses)
+
+    def _understand_logical_operators(self, question: str, question_object: Question) -> QuestionLogics:
+        return self.query_agent.understand_operators(question=question, question_object=question_object)
+
+    @staticmethod
+    def _filter_dishes_by_desired_ingredients(
+            input_dishes: List[AugmentedDish],
+            ingredients_list: List[Ingredient],
+            logical_operator: LogicalOperator
+    ) -> List[AugmentedDish]:
+        if logical_operator == LogicalOperator.AND:
+            output_dishes = copy.deepcopy(input_dishes)
+            for ingredient in ingredients_list:
+                output_dishes = [ad for ad in output_dishes if any(i == ingredient for i in ad.dish.ingredients.items)]
+        else:
+            output_dishes = []
+            for ingredient in ingredients_list:
+                output_dishes.extend([ad for ad in input_dishes if any(i == ingredient for i in ad.dish.ingredients.items)])
+
+        return output_dishes
+
+    @staticmethod
+    def _filter_dishes_by_disallowed_ingredients(
+            input_dishes: List[AugmentedDish],
+            ingredients_list: List[Ingredient]
+    ) -> List[AugmentedDish]:
+        output_dishes = copy.deepcopy(input_dishes)
+        for ingredient in ingredients_list:
+            output_dishes = [ad for ad in output_dishes if not any(i == ingredient for i in ad.dish.ingredients.items)]
+
+        return output_dishes
+
+    @staticmethod
+    def _filter_dishes_by_technique(input_dishes: List[AugmentedDish], technique: Technique, exclude_flag: bool) -> List[AugmentedDish]:
+        if not exclude_flag:
+            output_dishes = [ad for ad in input_dishes if any(i == technique for i in ad.dish.techniques.items)]
+        else:
+            output_dishes = [ad for ad in input_dishes if not any(i == technique for i in ad.dish.techniques.items)]
+
+        return output_dishes
 
     @staticmethod
     def _filter_dishes_by_restaurant(input_dishes: List[AugmentedDish], restaurant: Restaurant) -> List[AugmentedDish]:
@@ -118,39 +160,40 @@ class QueryManager:
     def _filter_dishes_by_chef_license(input_dishes: List[AugmentedDish], chef_license: License) -> List[AugmentedDish]:
         return [ad for ad in input_dishes if any(i == chef_license for i in ad.chef.licenses.items)]
 
-    @staticmethod
-    def _filter_dishes_by_ingredient(input_dishes: List[AugmentedDish], ingredient: Ingredient, exclude_flag: bool) -> List[AugmentedDish]:
-        if not exclude_flag:
-            output_dishes = [ad for ad in input_dishes if any(i == ingredient for i in ad.dish.ingredients.items)]
-        else:
-            output_dishes = [ad for ad in input_dishes if not any(i == ingredient for i in ad.dish.ingredients.items)]
-
-        return output_dishes
-
-    @staticmethod
-    def _filter_dishes_by_technique(input_dishes: List[AugmentedDish], technique: Technique, exclude_flag: bool) -> List[AugmentedDish]:
-        if not exclude_flag:
-            output_dishes = [ad for ad in input_dishes if any(i == technique for i in ad.dish.techniques.items)]
-        else:
-            output_dishes = [ad for ad in input_dishes if not any(i == technique for i in ad.dish.techniques.items)]
-
-        return output_dishes
-
     # public methods
     def answer_question(self, question: str) -> Answer:
 
-        # understand subquestions types and parameters.
+        # understand subquestions types and parameters
         logger.info('Original Question: ' + question.strip('\n'))
         question_object = self._understand_question(question=question)
         logger.info('Parsed Question: ' + question_object.model_dump_json())
 
-        # understand the relationships between subquestions (AND/OR).
-        relationships_sequence = []
+        # understand the relationships between subquestions
+        if any(
+                [
+                    len(question_object.desired_ingredients) > 1,
+                    len(question_object.desired_techniques) > 1,
+                    len(question_object.chef_licenses) > 1,
+                ]
+        ):
+            relationships_sequence = self._understand_logical_operators(question=question, question_object=question_object)
+            logger.info(relationships_sequence)
+        else:
+            relationships_sequence = QuestionLogics()
 
         # execute sequence of queries based on subquestions relationships
-        answer = Answer(dishes_codes=[])
+        # TODO: implement fuzzy matching mechanism
+        output_dishes = self._filter_dishes_by_desired_ingredients(
+            input_dishes=self.knowledge_base,
+            ingredients_list=question_object.desired_ingredients,
+            logical_operator=relationships_sequence.desired_ingredients_lo
+        )
+        output_dishes = self._filter_dishes_by_disallowed_ingredients(
+            input_dishes=output_dishes,
+            ingredients_list=question_object.disallowed_ingredients
+        )
 
-        return answer
+        return Answer(dishes_codes=[x.dish.code for x in output_dishes])
 
     @staticmethod
     def memorize_answers(answers: Dict[int, Answer]) -> None:

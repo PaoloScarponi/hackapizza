@@ -12,4 +12,5 @@ from .Dish import Dish
 from .AugmentedDish import AugmentedDish
 from .BaseQuestion import BaseQuestion
 from .Question import Question
+from .QuestionLogics import QuestionLogics
 from .Answer import Answer

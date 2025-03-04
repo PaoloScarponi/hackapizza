@@ -9,7 +9,7 @@ from langchain.output_parsers import PydanticOutputParser, RetryWithErrorOutputP
 # internal modules import
 from ..enums import Planet
 from ..configs import QAConfig
-from ..templates import BaseQuestion, IngredientsList, TechniquesList, Restaurant
+from ..templates import QuestionLogics, Question, BaseQuestion, IngredientsList, TechniquesList, Restaurant, License
 
 
 # class definition
@@ -42,7 +42,7 @@ class QueryAgent:
 
         # initialize output parser
         parser = PydanticOutputParser(pydantic_object=BaseQuestion)
-        retry_parser = RetryWithErrorOutputParser.from_llm(parser=parser, llm=self.model, max_retries=2)
+        retry_parser = RetryWithErrorOutputParser.from_llm(parser=parser, llm=self.model, max_retries=6)
 
         # build prompt
         prompt = PromptTemplate(
@@ -88,3 +88,51 @@ class QueryAgent:
 
     def find_restaurants(self, question: str, restaurants: List[Restaurant]) -> List[Restaurant]:
         return [r for r in restaurants if self._fuzzy_substring_match(r.name, question, max_distance=3)]
+
+    def find_licenses(self, question: str) -> List[License]:
+        # TODO: implement this method
+        return []
+
+    def understand_operators(self, question: str, question_object: Question) -> QuestionLogics:
+
+        # initialize output parser
+        parser = PydanticOutputParser(pydantic_object=QuestionLogics)
+        retry_parser = RetryWithErrorOutputParser.from_llm(parser=parser, llm=self.model, max_retries=4)
+
+        # build prompt
+        prompt = PromptTemplate(
+            template=(
+                'You are an advanced question parser that, given a specific question and a JSON descriptor that captures the'
+                'main entities in the question, produces a sequence of logical operators to use for translating the question'
+                'into a query of a generic database.\n'
+                '* Original Question: {question}\n'
+                '* Question Descriptor: {question_object}\n'
+                'Extract operators info and output in JSON format:\n'
+                '{format_instructions}\n'
+                'Make sure the output is fully compliant with the provided JSON schema.\n'
+                'Examples:\n'
+                '* INPUT: piatto con sale e pepe, OUTPUT: {{"desired_ingredients_lo": "and", desired_techniques_lo: None, chef_licenses_lo: None}}\n'
+                '* INPUT: piatto con sale o pepe, OUTPUT: {{"desired_ingredients_lo": "or", desired_techniques_lo: None, chef_licenses_lo: None}}\n'
+                '* INPUT: piatto con marinatura e bruciatura, OUTPUT: {{"desired_ingredients_lo": None, desired_techniques_lo: "and", chef_licenses_lo: None}}\n'
+                '* INPUT: piatto con marinatura o bruciatura, OUTPUT: {{"desired_ingredients_lo": None, desired_techniques_lo: "or", chef_licenses_lo: None}}\n'
+            ),
+            input_variables=[
+                'question',
+                'question_object'
+            ],
+            partial_variables={
+                'format_instructions': parser.get_format_instructions()
+            }
+        )
+
+        # query llm
+        prompt = prompt.invoke(
+            {
+                'question': question,
+                'question_object': question_object.model_dump_json(),
+            }
+        )
+        llm_response = self.model.invoke(prompt)
+        question_object = retry_parser.parse_with_prompt(llm_response, prompt)
+
+        return question_object
