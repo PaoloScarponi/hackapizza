@@ -22,7 +22,6 @@ from .templates import KBMInfo, Restaurant, Chef, Dish, AugmentedDish
 class KnowledgeBaseManager:
     """
     This class implements all the capabilities to populate the Knowledge Base.
-
     """
 
     # constructor

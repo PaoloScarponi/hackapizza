@@ -13,7 +13,7 @@ class RuleBasedParser:
 
     # non-public methods
     @staticmethod
-    def fuzzy_substring_match(substring: str, text: str, max_distance: int) -> bool:
+    def _fuzzy_substring_match(substring: str, text: str, max_distance: int) -> bool:
         sub_len = len(substring)
         for i in range(len(text) - sub_len + 1):
             if distance(substring, text[i:i + sub_len]) <= max_distance:
@@ -74,7 +74,7 @@ class RuleBasedParser:
         techniques_list = []
         input_str = '\n'.join(input_text).lower()
         for tn, tc in additional_info.items():
-            if cls.fuzzy_substring_match(substring=tn.lower(), text=input_str, max_distance=3):
+            if cls._fuzzy_substring_match(substring=tn.lower(), text=input_str, max_distance=3):
                 techniques_list.append(
                     Technique(
                         name=tn,

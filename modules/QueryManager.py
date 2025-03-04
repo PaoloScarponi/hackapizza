@@ -2,12 +2,13 @@
 import csv
 import json
 from pathlib import Path
-from typing import List, Dict
+from loguru import logger
+from typing import List, Dict, Tuple
 
 # internal modules import
-from .enums import Planet
 from .configs import QMConfig
-from .QueryAgent import QueryAgent
+from .agents import QueryAgent
+from .enums import Planet, LicenseName, LicenseCode
 from .templates import QMInfo, AugmentedDish, Restaurant, License, Ingredient, IngredientsList, Technique, TechniquesList, Question, Answer
 
 
@@ -15,7 +16,6 @@ from .templates import QMInfo, AugmentedDish, Restaurant, License, Ingredient, I
 class QueryManager:
     """
     This class implements all the capabilities to query the Knowledge Base.
-
     """
 
     # constructor
@@ -29,10 +29,11 @@ class QueryManager:
 
         # initialize supporting info object
         self.info = QMInfo(
-            questions_templates=self._load_questions_templates(config.questions_templates_path),
             planets_distances=self._load_planets_distances(config.planet_distances_path),
             ingredients_list=self._extract_ingredients_list(),
-            techniques_list=self._extract_techniques_list()
+            techniques_list=self._extract_techniques_list(),
+            licenses_list=self._load_licenses_list(),
+            restaurants_list=self._extract_restaurants()
         )
 
     # non-public methods
@@ -78,12 +79,32 @@ class QueryManager:
 
         return TechniquesList(items=techniques)
 
-    def _understand_subquestions_types(self, question: str) -> Question:
-        return self.query_agent.build_question_object(
+    @staticmethod
+    def _load_licenses_list() -> List[Tuple[LicenseName, LicenseCode]]:
+        return [(l_name, l_code) for l_name, l_code in zip(LicenseName, LicenseCode)]
+
+    def _extract_restaurants(self) -> List[Restaurant]:
+        restaurants = []
+        for ad in self.knowledge_base:
+            if ad.restaurant not in restaurants:
+                restaurants.append(ad.restaurant)
+
+        return restaurants
+
+    def _understand_question(self, question: str) -> Question:
+        base_question = self.query_agent.build_base_question_object(
             question=question,
             ingredients=self.info.ingredients_list,
-            planets_distances=self.info.planets_distances
+            techniques=self.info.techniques_list,
+            planets_distances = self.info.planets_distances
         )
+        restaurants = self.query_agent.find_restaurants(
+            question=question,
+            restaurants=self.info.restaurants_list
+        )
+        # TODO: add licenses extraction step
+
+        return Question(**base_question.model_dump(), restaurants=restaurants)
 
     @staticmethod
     def _filter_dishes_by_restaurant(input_dishes: List[AugmentedDish], restaurant: Restaurant) -> List[AugmentedDish]:
@@ -118,18 +139,18 @@ class QueryManager:
     # public methods
     def answer_question(self, question: str) -> Answer:
 
-        # Understand subquestions types and parameters.
-        question_object = self._understand_subquestions_types(question=question)
+        # understand subquestions types and parameters.
+        logger.info('Original Question: ' + question.strip('\n'))
+        question_object = self._understand_question(question=question)
+        logger.info('Parsed Question: ' + question_object.model_dump_json())
 
-        # 2. Understand the relationships between subquestions (AND/OR).
-        # 3. Execute query for each subquestion.
-        # 4. Combine results based on subquestions relationships.
+        # understand the relationships between subquestions (AND/OR).
+        relationships_sequence = []
 
-        return self.query_agent.answer_question(
-            question=question,
-            knowledge_base=self.knowledge_base,
-            planets_distances=self.info.planets_distances
-        )
+        # execute sequence of queries based on subquestions relationships
+        answer = Answer(dishes_codes=[])
+
+        return answer
 
     @staticmethod
     def memorize_answers(answers: Dict[int, Answer]) -> None:
