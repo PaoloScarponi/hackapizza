@@ -90,7 +90,7 @@ class QueryAgent:
         return [r for r in restaurants if self._fuzzy_substring_match(r.name, question, max_distance=3)]
 
     def find_licenses(self, question: str) -> List[License]:
-        # TODO: implement this method
+        # TODO (Medium): implement this method.
         return []
 
     def understand_operators(self, question: str, question_object: Question) -> QuestionLogics:

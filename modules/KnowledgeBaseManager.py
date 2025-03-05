@@ -171,10 +171,15 @@ class KnowledgeBaseManager:
     def _populate_dish(self, dishes_info: List[str], dishes_flag: bool) -> Dish:
         dish_code, dish_name = -1, ''
         for d_name, d_code in self.info.dishes_codes.items():
-            # TODO: make this fuzzy match more robust to avoid making mistakes on very similar names (e.g, 73, 75, 216, 242.)
-            if distance(dishes_info[0], d_name) <= 2:
+            if dishes_info[0].lower() == d_name.lower():
                 dish_code, dish_name = d_code, d_name
                 break
+        if dish_code == -1:
+            logger.warning('Dish Name Exact Match Failed, Trying with Fuzzy Match')
+            for d_name, d_code in self.info.dishes_codes.items():
+                if distance(dishes_info[0], d_name) <= 2:
+                    dish_code, dish_name = d_code, d_name
+                    break
         if dishes_flag:
             dish_ingredients = RuleBasedParser.extract_dish_ingredients(
                 input_text=dishes_info

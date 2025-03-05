@@ -4,6 +4,7 @@ import copy
 import json
 from pathlib import Path
 from loguru import logger
+from Levenshtein import distance
 from typing import List, Dict, Tuple
 
 # internal modules import
@@ -93,7 +94,7 @@ class QueryManager:
         return restaurants
 
     def _understand_question(self, question: str) -> Question:
-        # TODO: implement the logic to understand orders
+        # TODO (Low): implement the logic to understand orders.
         base_question = self.query_agent.build_base_question_object(
             question=question,
             ingredients=self.info.ingredients_list,
@@ -117,14 +118,16 @@ class QueryManager:
             ingredients_list: List[Ingredient],
             logical_operator: LogicalOperator
     ) -> List[AugmentedDish]:
+        if len(ingredients_list) == 0:
+            return input_dishes
         if logical_operator == LogicalOperator.AND:
             output_dishes = copy.deepcopy(input_dishes)
             for ingredient in ingredients_list:
-                output_dishes = [ad for ad in output_dishes if any(i == ingredient for i in ad.dish.ingredients.items)]
+                output_dishes = [ad for ad in output_dishes if any(distance(i.name.lower(), ingredient.name.lower()) <= 2 for i in ad.dish.ingredients.items)]
         else:
             output_dishes = []
             for ingredient in ingredients_list:
-                output_dishes.extend([ad for ad in input_dishes if any(i == ingredient for i in ad.dish.ingredients.items)])
+                output_dishes.extend([ad for ad in input_dishes if any(distance(i.name.lower(), ingredient.name.lower()) <= 2 for i in ad.dish.ingredients.items)])
 
         return output_dishes
 
@@ -135,30 +138,68 @@ class QueryManager:
     ) -> List[AugmentedDish]:
         output_dishes = copy.deepcopy(input_dishes)
         for ingredient in ingredients_list:
-            output_dishes = [ad for ad in output_dishes if not any(i == ingredient for i in ad.dish.ingredients.items)]
+            output_dishes = [ad for ad in output_dishes if not any(distance(i.name.lower(), ingredient.name.lower()) <= 2 for i in ad.dish.ingredients.items)]
 
         return output_dishes
 
     @staticmethod
-    def _filter_dishes_by_technique(input_dishes: List[AugmentedDish], technique: Technique, exclude_flag: bool) -> List[AugmentedDish]:
-        if not exclude_flag:
-            output_dishes = [ad for ad in input_dishes if any(i == technique for i in ad.dish.techniques.items)]
+    def _filter_dishes_by_desired_techniques(
+            input_dishes: List[AugmentedDish],
+            techniques_list: List[Technique],
+            logical_operator: LogicalOperator
+    ) -> List[AugmentedDish]:
+        if len(techniques_list) == 0:
+            return input_dishes
+        if logical_operator == LogicalOperator.AND:
+            output_dishes = copy.deepcopy(input_dishes)
+            for technique in techniques_list:
+                output_dishes = [ad for ad in output_dishes if any(distance(i.name.lower(), technique.name.lower()) <= 2 for i in ad.dish.techniques.items)]
         else:
-            output_dishes = [ad for ad in input_dishes if not any(i == technique for i in ad.dish.techniques.items)]
+            output_dishes = []
+            for technique in techniques_list:
+                output_dishes.extend([ad for ad in input_dishes if any(distance(i.name.lower(), technique.name.lower()) <= 2 for i in ad.dish.techniques.items)])
 
         return output_dishes
 
     @staticmethod
-    def _filter_dishes_by_restaurant(input_dishes: List[AugmentedDish], restaurant: Restaurant) -> List[AugmentedDish]:
-        return [ad for ad in input_dishes if restaurant.name == ad.restaurant.name]
+    def _filter_dishes_by_disallowed_techniques(
+            input_dishes: List[AugmentedDish],
+            techniques_list: List[Technique]
+    ) -> List[AugmentedDish]:
+        output_dishes = copy.deepcopy(input_dishes)
+        for technique in techniques_list:
+            output_dishes = [ad for ad in output_dishes if not any(distance(i.name, technique.name) <= 2 for i in ad.dish.techniques.items)]
+
+        return output_dishes
 
     @staticmethod
-    def _filter_dishes_by_planet(input_dishes: List[AugmentedDish], planet: Planet) -> List[AugmentedDish]:
-        return [ad for ad in input_dishes if planet == ad.restaurant.planet]
+    def _filter_dishes_by_planets(input_dishes: List[AugmentedDish], planets_list: List[Planet]) -> List[AugmentedDish]:
+        if len(planets_list) == 0:
+            return input_dishes
+        output_dishes = []
+        for planet in planets_list:
+            output_dishes.extend([ad for ad in input_dishes if planet == ad.restaurant.planet])
+
+        return output_dishes
 
     @staticmethod
-    def _filter_dishes_by_chef_license(input_dishes: List[AugmentedDish], chef_license: License) -> List[AugmentedDish]:
-        return [ad for ad in input_dishes if any(i == chef_license for i in ad.chef.licenses.items)]
+    def _filter_dishes_by_restaurants(input_dishes: List[AugmentedDish], restaurants_list: List[Restaurant]) -> List[AugmentedDish]:
+        if len(restaurants_list) == 0:
+            return input_dishes
+        output_dishes = []
+        for restaurant in restaurants_list:
+            output_dishes.extend([ad for ad in input_dishes if restaurant == ad.restaurant])
+
+        return output_dishes
+
+    @staticmethod
+    def _filter_dishes_by_licenses(input_dishes: List[AugmentedDish], licenses_list: List[License]) -> List[AugmentedDish]:
+        # TODO (Medium): revise this method by adding the check on the license level rather than the one on the name.
+        output_dishes = copy.deepcopy(input_dishes)
+        for license_ in licenses_list:
+            output_dishes = [ad for ad in input_dishes if any(i == license_ for i in ad.chef.licenses.items)]
+
+        return output_dishes
 
     # public methods
     def answer_question(self, question: str) -> Answer:
@@ -182,7 +223,6 @@ class QueryManager:
             relationships_sequence = QuestionLogics()
 
         # execute sequence of queries based on subquestions relationships
-        # TODO: implement fuzzy matching mechanism
         output_dishes = self._filter_dishes_by_desired_ingredients(
             input_dishes=self.knowledge_base,
             ingredients_list=question_object.desired_ingredients,
@@ -191,6 +231,27 @@ class QueryManager:
         output_dishes = self._filter_dishes_by_disallowed_ingredients(
             input_dishes=output_dishes,
             ingredients_list=question_object.disallowed_ingredients
+        )
+        output_dishes = self._filter_dishes_by_desired_techniques(
+            input_dishes=output_dishes,
+            techniques_list=question_object.desired_techniques,
+            logical_operator=relationships_sequence.desired_techniques_lo
+        )
+        output_dishes = self._filter_dishes_by_disallowed_techniques(
+            input_dishes=output_dishes,
+            techniques_list=question_object.disallowed_techniques
+        )
+        output_dishes = self._filter_dishes_by_planets(
+            input_dishes=output_dishes,
+            planets_list=question_object.planets
+        )
+        output_dishes = self._filter_dishes_by_restaurants(
+            input_dishes=output_dishes,
+            restaurants_list=question_object.restaurants
+        )
+        output_dishes = self._filter_dishes_by_licenses(
+            input_dishes=output_dishes,
+            licenses_list=question_object.chef_licenses
         )
 
         return Answer(dishes_codes=[x.dish.code for x in output_dishes])

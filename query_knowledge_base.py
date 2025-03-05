@@ -1,6 +1,7 @@
 # external modules import
 import os
 from pathlib import Path
+from loguru import logger
 from dotenv import load_dotenv
 
 # internal modules import
@@ -13,6 +14,8 @@ def query_knowledge_base(query_manager: QueryManager, questions_file_path: Path)
     with open(questions_file_path, 'r', encoding='utf-8') as f:
         for question_number, question in enumerate(f):
             answers[question_number] = query_manager.answer_question(question=question)
+            logger.info(f'Question: {question}')
+            logger.info(f'Answer: {answers[question_number].dishes_codes}')
     query_manager.memorize_answers(answers=answers)
 
     return
