@@ -26,6 +26,10 @@ The sequence of operations required to produce the uploaded results are the foll
 
 ## Potential Post-Submission Improvements
 
-* Understand the effect of not using ingredients categories and techniques subcategories on the performance.
-* Understand the effect of not updating the chef licenses based on dishes techniques.
-* Understand the effect of not handling substances law limits.
+* Double-check license extraction and filtering.
+* Try to handle planets distances manually using function calling.
+* Add order check, no matter if it is extracted from the question (low impact, low complexity).
+* There are some questions that ask for subcategories of techniques, which we do not take care of (medium impact, medium complexity).
+* The assumption that different attributes connect with each other with a _conjunction_ is not always valid (low impact, medium complexity).
+* There are some questions about licenses required for a dish, which we do not take care of (medium impact, high complexity).
+* There are some questions that ask for a certain number of ingredients or techniques among a larger set, which we do not take care of (medium impact, high complexity).

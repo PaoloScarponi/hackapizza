@@ -1,15 +1,16 @@
 # external modules import
 import json
-from typing import List, Dict
 from Levenshtein import distance
+from typing import List, Dict, Tuple
 from langchain_ollama.llms import OllamaLLM
 from langchain.prompts import PromptTemplate
+from langchain_core.exceptions import OutputParserException
 from langchain.output_parsers import PydanticOutputParser, RetryWithErrorOutputParser
 
 # internal modules import
-from ..enums import Planet
 from ..configs import QAConfig
-from ..templates import QuestionLogics, Question, BaseQuestion, IngredientsList, TechniquesList, Restaurant, License
+from ..enums import Planet, LicenseName, LicenseCode
+from ..templates import QuestionLogics, Question, BaseQuestion, IngredientsList, TechniquesList, Restaurant, LicensesList
 
 
 # class definition
@@ -58,7 +59,8 @@ class QueryAgent:
                 'Extract question info and output in JSON format:\n'
                 '{format_instructions}\n'
                 'Make sure the output is fully compliant with the provided JSON schema, and DO NOT include any '
-                'attribute if it is not explicitly mentioned in the question.\n\n'
+                'attribute if it is not explicitly mentioned in the question. Be particularly careful with the format '
+                'of planets.\n\n'
                 'Question: {question}'
             ),
             input_variables=[
@@ -89,32 +91,70 @@ class QueryAgent:
     def find_restaurants(self, question: str, restaurants: List[Restaurant]) -> List[Restaurant]:
         return [r for r in restaurants if self._fuzzy_substring_match(r.name, question, max_distance=3)]
 
-    def find_licenses(self, question: str) -> List[License]:
-        # TODO (Medium): implement this method.
-        return []
+    def find_licenses(self, question: str, licenses: List[Tuple[LicenseName, LicenseCode]]) -> LicensesList:
+
+        # initialize output parser
+        parser = PydanticOutputParser(pydantic_object=LicensesList)
+        retry_parser = RetryWithErrorOutputParser.from_llm(parser=parser, llm=self.model, max_retries=3)
+
+        # build prompt
+        prompt = PromptTemplate(
+            template=(
+                'You are an advanced Named Entity Recognizer that, given a specific question written in italian, '
+                'extract cooking licenses contained in it.\n'
+                'If you need information about the existing cooking licenses, you can find it in the JSON below:\n'
+                '{licenses}\n'
+                'Extract question info and output in JSON format:\n'
+                '{format_instructions}\n'
+                'Make sure the output is fully compliant with the provided JSON schema.\n\n'
+                'Question: {question}'
+            ),
+            input_variables=[
+                'question',
+                'licenses',
+            ],
+            partial_variables={
+                'format_instructions': parser.get_format_instructions()
+            }
+        )
+
+        # query llm
+        prompt = prompt.invoke(
+            {
+                'question': question,
+                'licenses': json.dumps({l[0].value: l[1].value for l in licenses})
+            }
+        )
+        llm_response = self.model.invoke(prompt)
+        try:
+            licenses_list = retry_parser.parse_with_prompt(llm_response, prompt)
+        except OutputParserException:
+            licenses_list = LicensesList(items=[])
+
+        return licenses_list
 
     def understand_operators(self, question: str, question_object: Question) -> QuestionLogics:
 
         # initialize output parser
         parser = PydanticOutputParser(pydantic_object=QuestionLogics)
-        retry_parser = RetryWithErrorOutputParser.from_llm(parser=parser, llm=self.model, max_retries=4)
+        retry_parser = RetryWithErrorOutputParser.from_llm(parser=parser, llm=self.model, max_retries=6)
 
         # build prompt
         prompt = PromptTemplate(
             template=(
                 'You are an advanced question parser that, given a specific question and a JSON descriptor that captures the'
                 'main entities in the question, produces a sequence of logical operators to use for translating the question'
-                'into a query of a generic database.\n'
+                'into a query of a generic database. Remember that "o" corresponds to "or" and "e" corresponds to "and".\n'
                 '* Original Question: {question}\n'
                 '* Question Descriptor: {question_object}\n'
                 'Extract operators info and output in JSON format:\n'
                 '{format_instructions}\n'
                 'Make sure the output is fully compliant with the provided JSON schema.\n'
                 'Examples:\n'
-                '* INPUT: piatto con sale e pepe, OUTPUT: {{"desired_ingredients_lo": "and", desired_techniques_lo: None, chef_licenses_lo: None}}\n'
-                '* INPUT: piatto con sale o pepe, OUTPUT: {{"desired_ingredients_lo": "or", desired_techniques_lo: None, chef_licenses_lo: None}}\n'
-                '* INPUT: piatto con marinatura e bruciatura, OUTPUT: {{"desired_ingredients_lo": None, desired_techniques_lo: "and", chef_licenses_lo: None}}\n'
-                '* INPUT: piatto con marinatura o bruciatura, OUTPUT: {{"desired_ingredients_lo": None, desired_techniques_lo: "or", chef_licenses_lo: None}}\n'
+                '* INPUT: piatto con sale e pepe, OUTPUT: {{"desired_ingredients_lo": "and"}}\n'
+                '* INPUT: piatto con sale o pepe, OUTPUT: {{"desired_ingredients_lo": "or"}}\n'
+                '* INPUT: piatto con marinatura e bruciatura, OUTPUT: {{"desired_techniques_lo: "and"}}\n'
+                '* INPUT: piatto con marinatura o bruciatura, OUTPUT: {{"desired_techniques_lo: "or"}}\n'
             ),
             input_variables=[
                 'question',

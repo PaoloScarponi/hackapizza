@@ -22,7 +22,7 @@ class QuestionLogics(BaseModel):
         title='Desired Techniques Logical Operators',
         description='The logical operator that connects the allowed techniques when converting the original question into a query on a generic database.'
     )
-    chef_licenses_lo: List[LogicalOperator] | None= Field(
+    chef_licenses_lo: List[LogicalOperator] | None = Field(
         default=None,
         title='Desired Licenses Logical Operators',
         description='The logical operator that connects the allowed licenses when converting the original question into a query on a generic database.'

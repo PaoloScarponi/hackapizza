@@ -105,7 +105,13 @@ class QueryManager:
             question=question,
             restaurants=self.info.restaurants_list
         )
-        licenses = self.query_agent.find_licenses(question=question)
+        if 'chef' in question.lower():
+            licenses = self.query_agent.find_licenses(
+                question=question,
+                licenses=self.info.licenses_list
+            ).items
+        else:
+            licenses = []
 
         return Question(**base_question.model_dump(), restaurants=restaurants, chef_licenses=licenses)
 
@@ -194,10 +200,9 @@ class QueryManager:
 
     @staticmethod
     def _filter_dishes_by_licenses(input_dishes: List[AugmentedDish], licenses_list: List[License]) -> List[AugmentedDish]:
-        # TODO (Medium): revise this method by adding the check on the license level rather than the one on the name.
         output_dishes = copy.deepcopy(input_dishes)
         for license_ in licenses_list:
-            output_dishes = [ad for ad in input_dishes if any(i == license_ for i in ad.chef.licenses.items)]
+            output_dishes = [ad for ad in input_dishes if any((i.code == license_.code and i.level >= license_.level) for i in ad.chef.licenses.items)]
 
         return output_dishes
 
@@ -258,7 +263,17 @@ class QueryManager:
 
     @staticmethod
     def memorize_answers(answers: Dict[int, Answer]) -> None:
-        with open(Path(__file__).parent.parent / 'data' / 'test_answers.json', 'w', encoding='utf-8') as f:
-            json.dump({k: v.dishes_codes for k, v in answers}, f, indent=4)
+        with open(Path(__file__).parent.parent / 'data' / 'test_answers.csv', 'w', encoding='utf-8', newline='') as f:
+            f.write('row_id,result\n')
+            for k, v in answers.items():
+                f.write(','.join([str(k), f'\"{",".join([str(c) for c in v.dishes_codes])}\"']) + '\n')
 
         return
+
+    # @staticmethod
+    # def find_nearby_planets(
+    #         planet: Planet,
+    #         threshold: int,
+    #         distance_matrix: Dict[Planet, Dict[Planet, int]]
+    # ) -> List[Planet]:
+    #     return [other_planet for other_planet, distance in distance_matrix[planet].items() if distance <= threshold]

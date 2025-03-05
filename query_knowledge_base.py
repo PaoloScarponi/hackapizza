@@ -12,10 +12,14 @@ from modules import QAConfig, QueryAgent, QMConfig, QueryManager
 def query_knowledge_base(query_manager: QueryManager, questions_file_path: Path) -> None:
     answers = {}
     with open(questions_file_path, 'r', encoding='utf-8') as f:
-        for question_number, question in enumerate(f):
+        for question_number, question in enumerate(f, start=1):
+            # if question_number < 32:
+            #     continue
             answers[question_number] = query_manager.answer_question(question=question)
             logger.info(f'Question: {question}')
             logger.info(f'Answer: {answers[question_number].dishes_codes}')
+            if len(answers[question_number].dishes_codes) == 0:
+                logger.warning('No Dish Found!')
     query_manager.memorize_answers(answers=answers)
 
     return
