@@ -83,7 +83,7 @@ class QueryManager:
 
     @staticmethod
     def _load_licenses_list() -> List[Tuple[LicenseName, LicenseCode]]:
-        return [(l_name, l_code) for l_name, l_code in zip(LicenseName, LicenseCode)]
+        return [(l_name, LicenseCode[l_name.name].value) for l_name in LicenseName]
 
     def _extract_restaurants(self) -> List[Restaurant]:
         restaurants = []
@@ -216,7 +216,7 @@ class QueryManager:
     ) -> List[AugmentedDish]:
         output_dishes = copy.deepcopy(input_dishes)
         for license_ in licenses_list:
-            output_dishes = [ad for ad in input_dishes if any((i.code == license_.code and i.level >= license_.level) for i in ad.chef.licenses.items)]
+            output_dishes = [ad for ad in output_dishes if any((i.code == license_.code and i.level >= license_.level) for i in ad.chef.licenses.items)]
 
         return output_dishes
 

@@ -111,9 +111,9 @@ class QueryAgent:
             template=(
                 'You are an advanced Named Entity Recognizer that, given a specific question written in italian, '
                 'extract cooking licenses contained in it.\n'
-                'If you need information about the existing cooking licenses, you can find it in the JSON below:\n'
+                'The existing cooking licenses are provided in the JSON below:\n'
                 '{licenses}\n'
-                'Extract question info and output in JSON format:\n'
+                'Extract the relevant information from the question and output it in JSON format as the schema provided:\n'
                 '{format_instructions}\n'
                 'Make sure the output is fully compliant with the provided JSON schema.\n\n'
                 'Question: {question}'
