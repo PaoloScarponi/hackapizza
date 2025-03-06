@@ -94,11 +94,13 @@ class QueryManager:
         return restaurants
 
     def _understand_question(self, question: str) -> Question:
-        # TODO (Low): implement the logic to understand orders.
         base_question = self.query_agent.build_base_question_object(
             question=question,
             ingredients=self.info.ingredients_list,
-            techniques=self.info.techniques_list,
+            techniques=self.info.techniques_list
+        )
+        planets = self.query_agent.find_planets(
+            question=question,
             planets_distances = self.info.planets_distances
         )
         restaurants = self.query_agent.find_restaurants(
@@ -112,8 +114,11 @@ class QueryManager:
             ).items
         else:
             licenses = []
+        orders = self.query_agent.find_orders(
+            question=question
+        )
 
-        return Question(**base_question.model_dump(), restaurants=restaurants, chef_licenses=licenses)
+        return Question(**base_question.model_dump(), planets=planets, restaurants=restaurants, chef_licenses=licenses, **orders)
 
     def _understand_logical_operators(self, question: str, question_object: Question) -> QuestionLogics:
         return self.query_agent.understand_operators(question=question, question_object=question_object)
@@ -179,7 +184,10 @@ class QueryManager:
         return output_dishes
 
     @staticmethod
-    def _filter_dishes_by_planets(input_dishes: List[AugmentedDish], planets_list: List[Planet]) -> List[AugmentedDish]:
+    def _filter_dishes_by_planets(
+            input_dishes: List[AugmentedDish],
+            planets_list: List[Planet]
+    ) -> List[AugmentedDish]:
         if len(planets_list) == 0:
             return input_dishes
         output_dishes = []
@@ -189,7 +197,10 @@ class QueryManager:
         return output_dishes
 
     @staticmethod
-    def _filter_dishes_by_restaurants(input_dishes: List[AugmentedDish], restaurants_list: List[Restaurant]) -> List[AugmentedDish]:
+    def _filter_dishes_by_restaurants(
+            input_dishes: List[AugmentedDish],
+            restaurants_list: List[Restaurant]
+    ) -> List[AugmentedDish]:
         if len(restaurants_list) == 0:
             return input_dishes
         output_dishes = []
@@ -199,10 +210,32 @@ class QueryManager:
         return output_dishes
 
     @staticmethod
-    def _filter_dishes_by_licenses(input_dishes: List[AugmentedDish], licenses_list: List[License]) -> List[AugmentedDish]:
+    def _filter_dishes_by_licenses(
+            input_dishes: List[AugmentedDish],
+            licenses_list: List[License]
+    ) -> List[AugmentedDish]:
         output_dishes = copy.deepcopy(input_dishes)
         for license_ in licenses_list:
             output_dishes = [ad for ad in input_dishes if any((i.code == license_.code and i.level >= license_.level) for i in ad.chef.licenses.items)]
+
+        return output_dishes
+
+    @staticmethod
+    def _filter_dishes_by_orders(
+            input_dishes: List[AugmentedDish],
+            andromeda_flag: bool,
+            armonisti_flag: bool,
+            naturalisti_flag: bool
+    ) -> List[AugmentedDish]:
+        if not any([andromeda_flag, armonisti_flag, naturalisti_flag]):
+            return input_dishes
+        output_dishes = []
+        if andromeda_flag:
+            output_dishes.extend([ad for ad in input_dishes if ad.dish.andromeda_flag])
+        if armonisti_flag:
+            output_dishes.extend([ad for ad in input_dishes if ad.dish.armonisti_flag])
+        if naturalisti_flag:
+            output_dishes.extend([ad for ad in input_dishes if ad.dish.naturalisti_flag])
 
         return output_dishes
 
@@ -258,6 +291,12 @@ class QueryManager:
             input_dishes=output_dishes,
             licenses_list=question_object.chef_licenses
         )
+        output_dishes = self._filter_dishes_by_orders(
+            input_dishes=output_dishes,
+            andromeda_flag=question_object.andromeda_flag,
+            armonisti_flag=question_object.armonisti_flag,
+            naturalisti_flag=question_object.naturalisti_flag
+        )
 
         return Answer(dishes_codes=[x.dish.code for x in output_dishes])
 
@@ -269,11 +308,3 @@ class QueryManager:
                 f.write(','.join([str(k), f'\"{",".join([str(c) for c in v.dishes_codes])}\"']) + '\n')
 
         return
-
-    # @staticmethod
-    # def find_nearby_planets(
-    #         planet: Planet,
-    #         threshold: int,
-    #         distance_matrix: Dict[Planet, Dict[Planet, int]]
-    # ) -> List[Planet]:
-    #     return [other_planet for other_planet, distance in distance_matrix[planet].items() if distance <= threshold]

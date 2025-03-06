@@ -6,6 +6,7 @@ from pydantic import Field
 from .BaseQuestion import BaseQuestion
 from .Restaurant import Restaurant
 from .License import License
+from ..enums import Planet
 
 
 # template definition
@@ -13,6 +14,10 @@ class Question(BaseQuestion):
     """
     This class models an extended question that aims at finding dishes in the Knowledge Base based on some constraints.
     """
+    planets: List[Planet] = Field(
+        title='Planets',
+        description='A list of acceptable planets based on questions of the form "Quali piatti sono preparati su <pianeti>?" or "Quali piatti sono preparati entro <distanza> da <pianeti>?" or variations.'
+    )
     restaurants: List[Restaurant] = Field(
         title='Restaurants',
         description='A list of acceptable restaurants based on a question of the form "Quali piatti sono preparati in <ristoranti>?" or variations'

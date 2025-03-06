@@ -8,7 +8,7 @@ class Planet(Enum):
     ASGARD = 'Asgard'
     NAMECC = 'Namecc'
     ARRAKIS = 'Arrakis'
-    KRIPTON = 'Krypton'
+    KRYPTON = 'Krypton'
     PANDORA = 'Pandora'
     CYBERTRON = 'Cybertron'
     EGO = 'Ego'

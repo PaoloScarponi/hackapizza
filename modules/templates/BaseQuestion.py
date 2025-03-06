@@ -3,7 +3,6 @@ from typing import List
 from pydantic import BaseModel, Field
 
 # internal modules import
-from ..enums import Planet
 from .Ingredient import Ingredient
 from .Technique import Technique
 
@@ -32,9 +31,4 @@ class BaseQuestion(BaseModel):
         default=[],
         title='Disallowed Techniques',
         description='A list of disallowed techniques based on a question of the form "Quali piatti NON sono preparati utilizzando <tecniche>?" or variations.'
-    )
-    planets: List[Planet] = Field(
-        default=[],
-        title='Planets',
-        description='A list of acceptable planets based on questions of the form "Quali piatti sono preparati su <pianeti>?" or "Quali piatti sono preparati entro <distanza> da <pianeti>?" or variations.'
     )
