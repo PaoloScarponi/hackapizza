@@ -7,3 +7,4 @@ Levenshtein==0.26.1
 langchain==0.3.19
 langchain-core==0.3.40
 langchain-ollama==0.2.3
+langchain-openai==0.3.7
