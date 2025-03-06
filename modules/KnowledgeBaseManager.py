@@ -69,8 +69,8 @@ class KnowledgeBaseManager:
         return output_text
 
     @staticmethod
-    def _extract_techniques_info(document: PDF) -> Dict[str, str]:
-        extraction_flag, technique_category, techniques = False, None, {}
+    def _extract_techniques_info(document: PDF) -> Dict[str, Tuple[str, str]]:
+        extraction_flag, technique_category, technique_subcategory, techniques = False, None, None, {}
         for page in document.pages:
             lines = page.extract_text_lines()
             for line in lines:
@@ -79,8 +79,10 @@ class KnowledgeBaseManager:
                 if extraction_flag:
                     if line['chars'][3]['size'] > 20:
                         technique_category = line['text'].split(':')[1].strip()
+                    if 14 <= line['chars'][3]['size'] <= 20:
+                        technique_subcategory = line['text'].strip()
                     if 12 < line['chars'][3]['size'] < 14:
-                        techniques[line['text']] = technique_category
+                        techniques[line['text']] = (technique_category, technique_subcategory)
 
         return techniques
 

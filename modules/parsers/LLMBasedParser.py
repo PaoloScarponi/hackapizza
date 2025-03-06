@@ -92,6 +92,7 @@ class LLMBasedParser:
                 '* ALWAYS specify all the attributes for every extracted license.\n'
                 '* USE ONLY names and codes available in the schema, DO NOT invent them. If you find any name or code'
                 'that is not in the schema, map it to the most plausible one in the schema.\n'
+                'If you find levels with a plus (e.g., 6+), map them to the closer bigger integer (e.g., 7)\n'
                 'In case you have doubts about the mapping between names and codes, you can check this additional info:\n'
                 '{additional_info}\n\n'
                 'Text: {input_text}'

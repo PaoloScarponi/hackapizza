@@ -43,16 +43,22 @@ class QueryAgent:
         # build prompt
         prompt = PromptTemplate(
             template=(
-                'You are an advanced question parser and Named Entity Recognizer that, given a specific question '
-                'written in italian, populates an object representing it.\n'
-                'To populate the ingredients, map those in the question to those in the list below:\n'
+                'You are an advanced Italian question parser and Named Entity Recognizer. Your task is to extract '
+                'structured information from a given question and populate a JSON object.\n'
+                'In doing so, keep the following guidelines in mind:\n'
+                '* Identify ingredients mentioned in the question and map them to those in the provided list:\n'
                 '{ingredients}\n'
-                'If you need information about cooking techniques, you can find it in the JSON below:\n'
+                '* Identify cooking techniques and map them to those in the provided list:\n'
                 '{techniques}\n'
+                '* For specific techniques, focus on the name of each technique.\n'
+                '* For open questions about a category of techniques, focus on the categories.\n'
+                '* Ensure every ingredient and technique matches those from the provided lists, otherwise, omit them.\n'
+                '* Infer techniques only when general subcategories are mentioned in the question.\n'
+                '* Do NOT infer additional ingredients that are not explicitly mentioned.\n'
+                '* If an ingredient contains multiple words, treat it as a single entity unless it matches a known technique.\n'
                 'Extract question info and output in JSON format:\n'
                 '{format_instructions}\n'
-                'Make sure the output is fully compliant with the provided JSON schema, and DO NOT include any '
-                'attribute if it is not explicitly mentioned in the question.\n\n'
+                'Make sure the output is fully compliant with the provided JSON schema.\n\n'
                 'Question: {question}'
             ),
             input_variables=[

@@ -1,10 +1,10 @@
 # external modules import
 import re
-from typing import List, Dict
 from Levenshtein import distance
+from typing import List, Dict, Tuple
 
 # internal modules import
-from ..enums import Planet, TechniqueCategory
+from ..enums import Planet, TechniqueCategory, TechniqueSubcategory
 from ..templates import Ingredient, IngredientsList, Technique, TechniquesList
 
 
@@ -51,7 +51,7 @@ class RuleBasedParser:
         return IngredientsList(items=[Ingredient(name=x) for x in ingredients_list])
 
     @staticmethod
-    def extract_dish_techniques_v1(input_text: List[str], additional_info: Dict[str, str]) -> TechniquesList:
+    def extract_dish_techniques_v1(input_text: List[str], additional_info: Dict[str, Tuple[str, str]]) -> TechniquesList:
         techniques_list, start_flag = [], False
         for line in input_text:
             if start_flag:
@@ -61,7 +61,8 @@ class RuleBasedParser:
                         techniques_list.append(
                             Technique(
                                 name=tn,
-                                category=TechniqueCategory(tc)
+                                category=TechniqueCategory(tc[0]),
+                                subcategory=TechniqueSubcategory(tc[1])
                             )
                         )
             if distance(line.lower(), 'tecniche') <= 1 or distance(line.lower(), 'techniques') <= 1:
@@ -70,15 +71,16 @@ class RuleBasedParser:
         return TechniquesList(items=techniques_list)
 
     @classmethod
-    def extract_dish_techniques_v2(cls, input_text: List[str], additional_info: Dict[str, str]) -> TechniquesList:
+    def extract_dish_techniques_v2(cls, input_text: List[str], additional_info: Dict[str, Tuple[str, str]]) -> TechniquesList:
         techniques_list = []
         input_str = '\n'.join(input_text).lower()
         for tn, tc in additional_info.items():
-            if cls._fuzzy_substring_match(substring=tn.lower(), text=input_str, max_distance=3):
+            if cls._fuzzy_substring_match(substring=tn.lower(), text=input_str, max_distance=4):
                 techniques_list.append(
                     Technique(
                         name=tn,
-                        category=TechniqueCategory(tc)
+                        category=TechniqueCategory(tc[0]),
+                        subcategory=TechniqueSubcategory(tc[1])
                     )
                 )
 

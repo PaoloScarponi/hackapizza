@@ -17,7 +17,8 @@ The sequence of operations required to produce the uploaded results are the foll
 1. Create a .env file containing the following environment variables
    * OLLAMA_SERVER_URI=<put the URI to an Ollama Server Here, if you are hosting it on your machine use 
      http://localhost:11434>
-   * LBP_MODEL_NAME=<Put the name of the Ollama Model to use for LLM-Based parsing here, we used gemma2:27b>
+   * LBP_MODEL_NAME=<Put the name of the Ollama Model to use for LLM-Based parsing here, we used gemma2:latest for 
+     generating the Knowledge Base and gemma2:27b for answering questions.>
 2. Execute the process_menu.py script to load every menu as a DoclingDocument and serialize the object as is. We 
    did this to speed up the experimentation phase by avoiding extracting the content of each pdf multiple times.
 3. Execute the build_knowledge_base.py script to create the knowledge base, which consists of a set of json 
