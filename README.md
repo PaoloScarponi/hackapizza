@@ -6,7 +6,7 @@ This project contains the code for the Kaggle Challenge [Hackapizza 2025 - Commu
 
 We applied some simple manual pre-processing step to simplify the data ingestion step:
 
-* Compressed Datapizza Menu from ~50MB to 2~MB.
+* Compressed Datapizza Menu from 50MB to 2MB.
 * Updated some names in the dish_mapping file to compensate for inconsistencies.
   * "Sinfonia Astrale" -> "Sinfonia Astrale - Risotto Multiversale con Risacca Celeste"
 
@@ -15,10 +15,10 @@ We applied some simple manual pre-processing step to simplify the data ingestion
 The sequence of operations required to produce the uploaded results are the following:
 
 1. Create a .env file containing the following environment variables
-   * OLLAMA_SERVER_URI=<put the URI to an Ollama Server Here, if you are hosting it on your machine use 
-     http://localhost:11434>
-   * LBP_MODEL_NAME=<Put the name of the Ollama Model to use for LLM-Based parsing here, we used gemma2:latest for 
-     generating the Knowledge Base and gemma2:27b for answering questions.>
+   * OLLAMA_SERVER_URI=...
+     * put the URI to an Ollama Server Here, if you are hosting it on your machine use http://localhost:11434
+   * LBP_MODEL_NAME=...
+     * Put the name of the Ollama Model to use for LLM-Based parsing here, we used gemma2:latest for generating the Knowledge Base and gemma2:27b for answering questions.
 2. Execute the process_menu.py script to load every menu as a DoclingDocument and serialize the object as is. We 
    did this to speed up the experimentation phase by avoiding extracting the content of each pdf multiple times.
 3. Execute the build_knowledge_base.py script to create the knowledge base, which consists of a set of json 

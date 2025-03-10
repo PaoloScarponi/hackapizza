@@ -102,8 +102,8 @@ if __name__ == '__main__':
     load_dotenv()
     answers = {}
     powerful_agent = PowerfulQueryAgent()
-    knowledge_base_ = powerful_agent.load_knowledge_base(Path(__file__).parent / 'data' / 'processed' / 'dishes')
-    planets_distances_ = powerful_agent.load_planets_distances(Path(__file__).parent / 'data' / 'planets_distances.csv')
+    knowledge_base_ = powerful_agent.load_knowledge_base(Path(__file__).parent.parent / 'data' / 'processed' / 'dishes')
+    planets_distances_ = powerful_agent.load_planets_distances(Path(__file__).parent.parent / 'data' / 'planets_distances.csv')
     with open(Path(__file__).parent / 'data' / 'test_questions.csv', 'r', encoding='utf-8') as f:
         for question_number, question_ in enumerate(f, start=1):
             answers_1 = powerful_agent.answer_question(
